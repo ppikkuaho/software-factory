@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/ratification_item.schema.json",
+  "$comment": "Tier-1 ratification-queue foundation owned by work item 0. Queue payload fields are frozen after creation; disposition is user-owned.",
+  "title": "ratification_item",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "payload_ref",
+    "text",
+    "queued_by",
+    "date",
+    "disposition"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^RQ-[0-9]+$" },
+    "kind": {
+      "enum": [
+        "cgate-escalation",
+        "tier3-ratification",
+        "improvement-note",
+        "activation-request"
+      ]
+    },
+    "payload_ref": { "type": "string" },
+    "text": { "type": "string" },
+    "queued_by": { "type": "string" },
+    "date": { "type": "string" },
+    "disposition": {
+      "$comment": "Work item 0 establishes the user-owned disposition group; null is the required undisposed creation state.",
+      "default": null,
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "by", "date"],
+          "properties": {
+            "status": {
+              "enum": ["accepted", "rejected", "deferred"]
+            },
+            "by": { "type": "string", "minLength": 1 },
+            "date": { "type": "string" },
+            "note": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "annotations": {
+      "$comment": "Work item 6 is the semantic owner. In-array append-only behavior is machine-enforced in v1; annotations never modify disposition or payload.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["date", "note"],
+        "properties": {
+          "date": { "type": "string" },
+          "note": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

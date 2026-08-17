@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/issue.schema.json",
+  "$comment": "Tier-1 issue foundation for item 0. Work item 2 is the semantic owner and may tighten issue semantics without changing this authority boundary.",
+  "title": "issue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "title",
+    "provenance",
+    "scope",
+    "question",
+    "done_definition",
+    "lanes",
+    "subgoals",
+    "status",
+    "closure"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^I-[0-9]+$" },
+    "title": { "type": "string" },
+    "provenance": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "scope": { "type": "string" },
+    "question": { "type": "string" },
+    "done_definition": { "type": "string" },
+    "lanes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "subgoals": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "observatory_attachments": {
+      "$comment": "Optional for legacy issues; new mints initialize it and PC appends byte-pinned canonical report refs.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ref", "sha256"],
+        "properties": {
+          "ref": {
+            "type": "string",
+            "pattern": "^observatory-report#[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "ratified",
+        "active",
+        "closed",
+        "parked",
+        "withdrawn"
+      ]
+    },
+    "closure": {
+      "$comment": "Work item 2 owns closure semantics; null represents an issue without a closure record.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "refs"],
+          "properties": {
+            "text": { "type": "string", "minLength": 1 },
+            "refs": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "dispositions": {
+              "$comment": "Optional for legacy closures; every new close writes it.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["ref", "status"],
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "pattern": "^tree#[^/#\\s]+/dispatch#d-[1-9][0-9]*(\\.[1-9][0-9]*)*-[1-9][0-9]*$"
+                  },
+                  "status": { "enum": ["completed", "recalled", "demoted"] }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "closed" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": { "closure": { "type": "object" } },
+        "required": ["closure"]
+      },
+      "else": {
+        "properties": { "closure": { "type": "null" } },
+        "required": ["closure"]
+      }
+    }
+  ]
+}

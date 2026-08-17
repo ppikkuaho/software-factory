@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/dispatch.schema.json",
+  "$comment": "A1 §3 dispatch record — leaf-attached, one per dispatch. director writes question/done_definition/plan_ref/steers; unit writes interrupt; harness writes id/node/epoch/outcome/metering/role_packet/adjudications/report_ref/archive_ref/report_hash. outcome nullable until written.",
+  "title": "dispatch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "node", "question", "done_definition", "epoch", "outcome", "steers", "adjudications", "issue_ref"],
+  "properties": {
+    "id": { "type": "string", "$comment": "A1 §3 — d-<node>-<N>" },
+    "node": { "type": "string" },
+    "issue_ref": {
+      "type": ["string", "null"],
+      "pattern": "^I-[0-9]+$",
+      "$comment": "Coherence amendments §4 — nullable director-authored back-reference to the PC-owned issue; null when this dispatch is not an issue subgoal."
+    },
+    "question": { "type": "string" },
+    "done_definition": { "type": "string", "$comment": "A1 §3 — achievement-based end condition (concept §8.2)" },
+    "plan_ref": { "type": ["string", "null"], "$comment": "A1 §3 — senior-authored ex-ante plan" },
+    "steers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["when", "message"],
+        "properties": {
+          "when": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    },
+    "interrupt": {
+      "$comment": "A1 §3 v2 — unit's one legal upward message",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["when", "reason"],
+          "properties": {
+            "when": { "type": "string" },
+            "reason": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "outcome": {
+      "$comment": "A1 §3 — nullable until written",
+      "oneOf": [{ "type": "null" }, { "enum": ["completed", "blocked", "recalled", "retry-operational"] }]
+    },
+    "metering": {
+      "$comment": "A1 §3 — passive, never enforced",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tokens", "wall_clock"],
+          "properties": {
+            "tokens": { "type": ["integer", "null"] },
+            "wall_clock": { "type": ["number", "null"] }
+          }
+        }
+      ]
+    },
+    "epoch": { "type": "integer", "minimum": 0 },
+    "role_packet": {
+      "$comment": "A1 §3 v2.1 (A3) — seam packet provenance",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "hash"],
+          "properties": {
+            "version": { "type": "string" },
+            "hash": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "adjudications": { "type": "array", "items": { "type": "string" }, "$comment": "Wave A — ordered per-command verdict-history refs; aN is an adjudication ordinal, not a report/bounce-attempt count" },
+    "report_ref": { "type": ["string", "null"] },
+    "archive_ref": { "type": ["string", "null"] },
+    "report_hash": { "type": ["string", "null"], "$comment": "U2 — sha256 recorded at submit; freeze anchor" }
+  }
+}

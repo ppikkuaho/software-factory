@@ -1,0 +1,44 @@
+[project]
+name = "ht"
+version = "0.0.0"
+description = "hypothesis-tree research-state write tool (Phase 0 v0) — the only sanctioned API for state mutation (A2 §4, D7)"
+requires-python = ">=3.11"
+dependencies = ["jsonschema>=4.18"]
+
+[project.scripts]
+ht = "ht.cli:main"
+ht-trace = "trace_reader.cli:main"
+ht-observe = "observatory.cli:main"
+ht-cgate = "composition_gate.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["system/ht"]
+dev-mode-dirs = ["system", "system/instruments/trace-reader", "system/instruments/observatory", "system/instruments/composition-gate"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"system/instruments/trace-reader/trace_reader" = "trace_reader"
+"system/instruments/observatory/observatory" = "observatory"
+"system/instruments/composition-gate/composition_gate" = "composition_gate"
+"system/instruments/trace-reader/prompts/behavioral-record.v1.md" = "prompts/behavioral-record.v1.md"
+"system/instruments/trace-reader/prompts/behavioral-record.v2.md" = "prompts/behavioral-record.v2.md"
+"system/instruments/observatory/prompts/deep-dive.v1.md" = "prompts/deep-dive.v1.md"
+"system/instruments/observatory/prompts/graded-check.v1.md" = "prompts/graded-check.v1.md"
+"system/instruments/observatory/prompts/spine-derivation.v1.md" = "prompts/spine-derivation.v1.md"
+"system/instruments/observatory/prompts/triage.v1.md" = "prompts/triage.v1.md"
+"system/instruments/composition-gate/prompts/composition-gate-review.v1.md" = "composition_gate/prompts/composition-gate-review.v1.md"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [
+    "system",
+    "system/instruments/trace-reader",
+    "system/instruments/observatory",
+    "system/instruments/composition-gate",
+]

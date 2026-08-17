@@ -1,0 +1,393 @@
+{
+ "_comment": "The doc registry (design/DOC-SYSTEM.md). Per block: landed version, source file under operational/shared/blocks/, and the carrier docs — verbatim (variant: null) or a NAMED per-level adaptation (variant: <file>). anchor = the heading tools/render_blocks.py splices the block before when it is not yet landed. Registry order = document order for blocks sharing an anchor. GREEN CHECKS = MECHANICAL CONFORMANCE ONLY — doc health belongs to the judgment layer.",
+ "schema": 1,
+ "blocks_root": "operational/shared/blocks",
+ "templates": [
+  "operational/shared/templates/plan-template.md",
+  "operational/shared/templates/report-template.md",
+  {
+   "path": "operational/shared/templates/report-template.L5.md",
+   "adapts": "operational/shared/templates/report-template.md",
+   "level": "L5",
+   "reason": "implementation L5 must expose the adopted four-part claim account (drove-and-watched, inferred, residual uncertainty, parent-owned inventory); the existing node-form selector already prefers a per-level adaptation"
+  },
+  {
+   "path": "operational/shared/templates/report-template.L5+.md",
+   "adapts": "operational/shared/templates/report-template.md",
+   "level": "L5+",
+   "reason": "a reviewer does not DISCHARGE requirements — it VERIFIES them; 'Requirement IDs discharged' becomes 'Requirement IDs verified (per-criterion verdicts)', aligning with QUALITY-GATE M52 (the verdict table is the reviewer's gate artifact)"
+  }
+ ],
+ "blocks": {
+  "decision-delivery-signoff": {
+   "version": 5,
+   "duty": "every seat keeps submitted candidate bytes frozen until verdict or fresh submission, uses only the provisioned .tmp scratch tree without destructive filesystem commands, stops retrying a substrate command that has failed three consecutive times with the same error class (marker + end the turn), reads new inbox rows when notified, keeps decisions in owned canonical artifacts rather than generated-only projections, then reads its current inbox as the second-to-last act before DONE or FAILED",
+   "source": "decision-delivery-signoff.md",
+   "notes": "v5 adds the seat-side fail-fast law (owner ruling 2026-08-01, the usage escape hatch): the same substrate command failing three consecutive times with the same error class stops the retry loop, records a substrate-fault marker, and ends the turn — ending the turn is what stops the meter. Landed here because this block is the all-seat home for the operational hygiene of a turn (scratch, destructive commands, inbox, terminal signal); the fault-marker COUNTER as a pause trigger stays deferred.",
+   "carriers": [
+    {
+     "doc": "operational/L1/role.md",
+     "variant": null,
+     "anchor": "<!-- /surface:L1 launch id=orchestrator-role -->"
+    },
+    {
+     "doc": "operational/L2/role.md",
+     "variant": null,
+     "anchor": "<!-- /surface:L2 launch id=architect-role -->"
+    },
+    {
+     "doc": "operational/L2+/role.md",
+     "variant": null,
+     "anchor": "<!-- /surface:L2+ launch id=review-role -->"
+    },
+    {
+     "doc": "operational/L3/role.md",
+     "variant": null,
+     "anchor": "<!-- /surface:L3 launch id=area-owner-role -->"
+    },
+    {
+     "doc": "operational/L3+/role.md",
+     "variant": null,
+     "anchor": "<!-- /surface:L3+ launch id=review-role -->"
+    },
+    {
+     "doc": "operational/L4/role.md",
+     "variant": null,
+     "anchor": "<!-- /surface:L4 launch id=coordinator-role -->"
+    },
+    {
+     "doc": "operational/L4+/role.md",
+     "variant": null,
+     "anchor": "<!-- /surface:L4+ launch id=review-role -->"
+    },
+    {
+     "doc": "operational/L5/role.md",
+     "variant": null,
+     "anchor": "<!-- /surface:L5 launch id=executor-role -->"
+    },
+    {
+     "doc": "operational/L5+/role.md",
+     "variant": null,
+     "anchor": "<!-- /surface:L5+ launch id=reviewer-role -->"
+    },
+    {
+     "doc": "operational/shared/review-handbook.md",
+     "variant": null,
+     "anchor": "<!-- /surface:REVIEW-CHECK launch id=check-reviewer-role -->"
+    }
+   ]
+  },
+  "review-accountability": {
+   "version": 1,
+   "duty": "review seats enumerate assigned items as answered or declined; upper gate leads double-assign decisive questions and cite axis reports for claims about panel behavior",
+   "source": "review-accountability.md",
+   "notes": "L5+ and REVIEW-CHECK are named reviewer adaptations because they return assigned items but do not dispatch a decomposed panel.",
+   "carriers": [
+    {
+     "doc": "operational/L2+/role.md",
+     "variant": null,
+     "anchor": "<!-- /surface:L2+ launch id=output-contract -->"
+    },
+    {
+     "doc": "operational/L3+/role.md",
+     "variant": null,
+     "anchor": "<!-- /surface:L3+ launch id=output-contract -->"
+    },
+    {
+     "doc": "operational/L4+/role.md",
+     "variant": null,
+     "anchor": "<!-- /surface:L4+ launch id=review-lead-task -->"
+    },
+    {
+     "doc": "operational/L5+/role.md",
+     "variant": "review-accountability.reviewer.md",
+     "anchor": "<!-- /surface:L5+ launch id=review-method -->"
+    },
+    {
+     "doc": "operational/shared/review-handbook.md",
+     "variant": "review-accountability.reviewer.md",
+     "anchor": "<!-- /surface:REVIEW-CHECK launch id=check-report-contract -->"
+    }
+   ]
+  },
+  "claim-proof-account": {
+   "version": 1,
+   "duty": "implementation L5 takes one decision-complete recipient-visible claim, aligns its face, proves it by driving, separates observation/inference/uncertainty/inventory, and stops at the proven claim; L4 owns inventory triage",
+   "source": "claim-proof-account.md",
+   "notes": "L4 is a named adaptation because it receives and triages the claim account rather than producing the implementation account.",
+   "carriers": [
+    {
+     "doc": "operational/L4/role.md",
+     "variant": "claim-proof-account.L4.md",
+     "anchor": "## The L5/L5+ Execute-Review Pair (M52)"
+    },
+    {
+     "doc": "operational/L5/role.md",
+     "variant": null,
+     "anchor": "## Responsibilities"
+    },
+    {
+     "doc": "operational/L5/swe-handbook.md",
+     "variant": null,
+     "anchor": "## Testing"
+    }
+   ]
+  },
+  "acceptance-package-proof": {
+   "version": 1,
+   "duty": "a bindable test-author package is executable checks plus a runnable live-scenario spine and a non-empty per-check red-run log; ambiguity is a needs_answer message, never an authored product decision",
+   "source": "acceptance-package-proof.md",
+   "notes": "L4 is a named adaptation because it prices stakes and authors the package contract into each test-author brief.",
+   "carriers": [
+    {
+     "doc": "operational/L4/role.md",
+     "variant": "acceptance-package-proof.L4.md",
+     "anchor": "## Acceptance Packages"
+    },
+    {
+     "doc": "operational/L5/role.md",
+     "variant": null,
+     "anchor": "## The L5 / L5+ Execute-Review Pair"
+    },
+    {
+     "doc": "operational/L5/config.md",
+     "variant": null,
+     "anchor": "## Testing"
+    },
+    {
+     "doc": "operational/shared/templates/test-author-brief-template.md",
+     "variant": null,
+     "anchor": "## Output Contract"
+    }
+   ]
+  },
+  "review-by-driving": {
+   "version": 1,
+   "duty": "reviewers derive their own verdict by driving the real artifact on a fresh disposable instance against the frozen contract; author reports and green automation are evidence, not verdicts",
+   "source": "review-by-driving.md",
+   "notes": "L5+ is a named adaptation because it alone reviews test-author packages and must judge the live-scenario spine and per-check observed-red record. The owner explicitly excluded the source doctrine's warm-verifier clause.",
+   "carriers": [
+    {
+     "doc": "operational/L5+/role.md",
+     "variant": "review-by-driving.L5+.md",
+     "anchor": "## What you do"
+    },
+    {
+     "doc": "operational/shared/review-handbook.md",
+     "variant": null,
+     "anchor": "## Gate Orchestrator"
+    },
+    {
+     "doc": "operational/L4+/role.md",
+     "variant": null,
+     "anchor": "## Review Method"
+    },
+    {
+     "doc": "operational/L3+/role.md",
+     "variant": null,
+     "anchor": "## Review Method"
+    },
+    {
+     "doc": "operational/L2+/role.md",
+     "variant": null,
+     "anchor": "## Review Method"
+    }
+   ]
+  },
+  "composition-proof": {
+   "version": 1,
+   "duty": "higher gates drive composition at their own altitude: live seams, cross-unit failure paths, positive and negative/MNF journeys, emergent properties, wiring, and drift from the frozen plan",
+   "source": "composition-proof.md",
+   "carriers": [
+    {
+     "doc": "operational/shared/review-handbook.md",
+     "variant": null,
+     "anchor": "## Higher-Gate Altitude"
+    },
+    {
+     "doc": "operational/L4+/role.md",
+     "variant": null,
+     "anchor": "## Review Checks"
+    },
+    {
+     "doc": "operational/L3+/role.md",
+     "variant": null,
+     "anchor": "## Review Checks"
+    },
+    {
+     "doc": "operational/L2+/role.md",
+     "variant": null,
+     "anchor": "## Review Checks"
+    }
+   ]
+  },
+  "gate-output-contract": {
+   "version": 7,
+   "duty": "each level's review gate owns parent-visible forwarding and produces a named altitude-specific artifact; the executor submits only a candidate; never re-run lower-level verification (LR-13 cure + gate-owned-forwarding)",
+   "source": null,
+   "notes": "v1 = the splice_gate_contracts.py landing (legacy marker '<!-- gate-output-contract (LR-13) -->'), migrated verbatim into this scheme as v2. Every carrier is an adaptation — there is no base. L5+ gains the GATE-OUTPUT-CONTRACTS-DRAFT §4 statement. v3: the zero-L3 small-project profile had been blessed by the user 2026-06-12. v4: gate-owned-forwarding — the executor submits a candidate, the review gate owns parent-visible completion — and L3 gains the missing area-composition review artifact. v5: the 2026-06-16 user ruling retires zero-L3; L2 must pass product execution through an L3 owner, while a trivial area may still combine planning and execution-management in one L3. v6: higher gates require lower execution child gate-pass evidence on ACCEPT, and L2/L3 wording makes inline lower-layer execution out of scope. v7: L1 writes a preliminary per-outcome/per-MNF recipient-visible judgment, posts one owner playback question, and promotes only after the current immutable answer confirms.",
+   "carriers": [
+    {
+     "doc": "operational/L1/role.md",
+     "variant": "gate-output-contract.L1.md",
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L2/role.md",
+     "variant": "gate-output-contract.L2.md",
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L3/role.md",
+     "variant": "gate-output-contract.L3.md",
+     "anchor": "<!-- block:plan-first v1 -->"
+    },
+    {
+     "doc": "operational/L4/role.md",
+     "variant": "gate-output-contract.L4.md",
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L5+/role.md",
+     "variant": "gate-output-contract.L5+.md",
+     "anchor": "## Boundaries"
+    }
+   ]
+  },
+  "plan-first": {
+   "version": 3,
+   "duty": "first act = high-level native task list; bounded orientation; durable plan.md next with fixed final three items; preinstantiated forms are read through the file-read tool before editing; keep task tool and plan.md aligned; successor inherits the file",
+   "source": "plan-first.md",
+   "carriers": [
+    {
+     "doc": "operational/L1/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L2/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L3/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L4/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L5/role.md",
+     "variant": null,
+     "anchor": "## Responsibilities"
+    },
+    {
+     "doc": "operational/L5+/role.md",
+     "variant": null,
+     "anchor": "## Boundaries"
+    }
+   ]
+  },
+  "report-contract": {
+   "version": 3,
+   "duty": "report.md required at DONE at every level (E2 refuses without it); shared template; given requirement IDs cited as bare references even when local artifacts declare serving artifact IDs",
+   "source": "report-contract.md",
+   "notes": "L5+ carries a NAMED adaptation: a reviewer VERIFIES requirement IDs rather than discharging them, follows the report-template.L5+.md adaptation, and owes the citation duty for its OWN report — both Run-2 L5+ reviewers tripped the E2 citation check because the L5+ bundle carried no such duty.",
+   "carriers": [
+    {
+     "doc": "operational/L1/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L2/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L3/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L4/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L5/role.md",
+     "variant": null,
+     "anchor": "## Responsibilities"
+    },
+    {
+     "doc": "operational/L5+/role.md",
+     "variant": "report-contract.L5+.md",
+     "anchor": "## Boundaries"
+    }
+   ]
+  },
+  "trace-discipline": {
+   "version": 2,
+   "duty": "trace stanzas declared once in declaring artifacts; downstream docs cite bare IDs and never re-declare; given IDs never re-minted; declaration ownership follows artifact ownership (v2 — the law behind Run-2's DUP-ID bounces)",
+   "source": "trace-discipline.md",
+   "carriers": [
+    {
+     "doc": "operational/L1/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L2/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L3/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L4/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L5/role.md",
+     "variant": null,
+     "anchor": "## Responsibilities"
+    },
+    {
+     "doc": "operational/L5+/role.md",
+     "variant": null,
+     "anchor": "## Boundaries"
+    }
+   ]
+  },
+  "completion-target": {
+   "version": 2,
+   "duty": "completion bias binds to the level's OWN work product, never to 'my children finished'; agents are the vehicle (user ruling 2026-06-12; LR-10 + the altitude rule)",
+   "source": "completion-target.md",
+   "carriers": [
+    {
+     "doc": "operational/L2/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L3/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    },
+    {
+     "doc": "operational/L4/role.md",
+     "variant": null,
+     "anchor": "## Visibility Scope (F34)"
+    }
+   ],
+   "notes": "v2 rewrite (user, 2026-06-12, AI-DESIGN-PRINCIPLES #1: point the agent AT the right target — activating the professional frame beats warning off the wrong one); v1's anti-pattern 'smells' dropped, positive deliverable-identity framing leads."
+  }
+ }
+}

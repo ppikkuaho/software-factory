@@ -1,0 +1,18 @@
+{
+  "schema_version": "hypothesis-tree-reference-projection-registry/1.0.0",
+  "renderer_token": "ht-reference-projection/1.0.0",
+  "entries": [
+    {"source_kind": "issue", "projection_schema_version": "hypothesis-tree-semantic-issue/1.0.0", "field_policy": {"mode": "select", "fields": ["id", "title", "provenance", "scope", "question", "done_definition", "lanes", "subgoals", "observatory_attachments", "status", "closure"], "nested": {}}},
+    {"source_kind": "issue-queue", "projection_schema_version": "hypothesis-tree-semantic-issue-queue/1.0.0", "field_policy": {"mode": "select", "fields": ["entries"], "nested": {}}},
+    {"source_kind": "ratification-item", "projection_schema_version": "hypothesis-tree-semantic-ratification-item/1.0.0", "field_policy": {"mode": "select", "fields": ["id", "kind", "payload_ref", "text", "queued_by", "date", "disposition", "annotations"], "nested": {"annotations": ["date", "note"]}}},
+    {"source_kind": "subgoal", "projection_schema_version": "hypothesis-tree-semantic-subgoal/1.0.0", "field_policy": {"mode": "select", "fields": ["id", "issue_ref", "lane", "question", "done_definition"], "nested": {}}},
+    {"source_kind": "task-package", "projection_schema_version": "hypothesis-tree-semantic-task-package/1.0.0", "field_policy": {"mode": "select", "fields": ["package_kind", "role_profile_id", "target_ref", "issue_ref", "subgoal_ref", "dispatch_ref", "semantic_brief", "reference_map", "workspace", "output_contract", "source_action_ref"], "nested": {"reference_map": ["ref", "use_when"]}}},
+    {"source_kind": "action-receipt", "projection_schema_version": "hypothesis-tree-semantic-action-receipt/1.0.0", "field_policy": {"mode": "select", "fields": ["id", "action_kind", "target_ref", "payload", "profile_id", "role_packet", "task_package_ref", "outputs", "created_at"], "nested": {}}},
+    {"source_kind": "inbox-delivery", "projection_schema_version": "hypothesis-tree-semantic-inbox-delivery/1.0.0", "field_policy": {"mode": "select", "fields": ["delivery_id", "subgoal_ref", "issue_ref", "lane", "profile_id", "task_package_ref", "created_by_action_ref", "retry_of", "created_at"], "nested": {}}},
+    {"source_kind": "inbox-receipt", "projection_schema_version": "hypothesis-tree-semantic-inbox-receipt/1.0.0", "field_policy": {"mode": "select", "fields": ["delivery_id", "subgoal_ref", "issue_ref", "lane", "profile_id", "task_package_ref", "received_at"], "nested": {}}},
+    {"source_kind": "dispatch", "projection_schema_version": "hypothesis-tree-semantic-dispatch/1.0.0", "field_policy": {"mode": "select", "fields": ["id", "node", "issue_ref", "subgoal_ref", "question", "done_definition", "plan_ref", "steers", "interrupt", "outcome", "epoch", "adjudications", "report_ref", "archive_ref", "report_hash", "director_note"], "nested": {}}},
+    {"source_kind": "plan|report|unit-artifact|qa", "projection_schema_version": "hypothesis-tree-semantic-artifact-text/1.0.0", "field_policy": {"mode": "registered-raw-utf8", "fields": [], "nested": {}}},
+    {"source_kind": "schema-declared-bounded-json", "projection_schema_version": "hypothesis-tree-semantic-bounded-json/1.0.0", "field_policy": {"mode": "recursive-deny", "fields": ["action_ref", "created_by_action_ref", "packet_sha256", "request_id", "binding_id", "lease_epoch", "session_id", "fence", "capture_manifest_sha256", "source_action_sha256"], "nested": {}}},
+    {"source_kind": "committed-methodology-text", "projection_schema_version": "hypothesis-tree-semantic-methodology-text/1.0.0", "field_policy": {"mode": "raw-utf8-negative-scan", "fields": [], "nested": {}}}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/interrupt.schema.json",
+  "$comment": "The sole director-to-PC blocking interrupt. Frozen after creation.",
+  "title": "interrupt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "raised_by", "issue_ref", "sub_goal_ref", "kind", "rationale", "date"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^INT-[0-9]+$" },
+    "raised_by": { "type": "string", "minLength": 1 },
+    "issue_ref": { "type": "string", "pattern": "^I-[0-9]+$" },
+    "sub_goal_ref": { "type": "string", "minLength": 1 },
+    "kind": { "const": "cannot-be-completed-meaningfully-as-posed" },
+    "rationale": { "type": "string", "minLength": 1 },
+    "date": { "type": "string", "minLength": 1 }
+  }
+}

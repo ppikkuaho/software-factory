@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree.local/subgoal.schema.json",
+  "$defs": {
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"}
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "issue_ref", "lane", "question", "done_definition", "created_at", "created_by_action_ref"],
+  "properties": {
+    "schema_version": {"const": "hypothesis-tree-subgoal/1.0.0"},
+    "id": {"type": "string", "pattern": "^SG-[1-9][0-9]*$"},
+    "issue_ref": {"type": "string", "pattern": "^I-[1-9][0-9]*$"},
+    "lane": {"const": "L4"},
+    "question": {"type": "string", "minLength": 1},
+    "done_definition": {"type": "string", "minLength": 1},
+    "created_at": {"$ref": "#/$defs/timestamp"},
+    "created_by_action_ref": {"type": "string", "pattern": "^action-receipt#AR-[1-9][0-9]*$"}
+  }
+}

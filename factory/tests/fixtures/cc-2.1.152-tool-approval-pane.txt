@@ -1,0 +1,15 @@
+────────────────────────────────────────────────────────────────────────────────
+ Bash command
+
+   /bin/ls -la /private/var/folders/xx/example/T/example-workspace           
+                   
+   List workspace contents with full path
+
+ This command requires approval
+
+ Do you want to proceed?
+ ❯ 1. Yes
+   2. Yes, and don’t ask again for: /bin/ls *
+   3. No
+
+ Esc to cancel · Tab to amend · ctrl+e to explain

@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "harnessd"
+version = "0.0.0"
+description = "L1-L5 agent harness daemon (walking skeleton)."
+requires-python = ">=3.11"
+dependencies = [
+    "PyYAML>=6.0",
+]
+
+# Repo-root (flat) package layout, per IMPLEMENTATION-PLAN §3 module table:
+# `harnessd/store.py`, `harnessd/config.py`, `harnessd/states.py`, ... live directly
+# under `harnessd/` at the repo root (design citations resolve `../design/...`).
+# This is NOT a src/ layout.
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["harnessd*"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+addopts = "-ra -m 'not real_boot'"
+# Markers reserved by the test strategy (§4). real_boot is the ONE usage-spending
+# integration test, kept out of the default deterministic, usage-free run.
+markers = [
+    "real_boot: spends real model subscription (one in-role L1 boot). Deselected by default.",
+]

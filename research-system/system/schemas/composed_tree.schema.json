@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/composed_tree.schema.json",
+  "$comment": "Harness-generated deterministic mechanical union. It is uncitable and never re-derives standing.",
+  "title": "composed_tree",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["generated", "citable", "trees", "issues", "issue_edges"],
+  "properties": {
+    "generated": { "const": true },
+    "citable": { "const": false },
+    "trees": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["component", "tree", "nodes"],
+        "properties": {
+          "component": { "type": "string", "minLength": 1 },
+          "tree": { "$ref": "tree.schema.json" },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["node", "dispatches"],
+              "properties": {
+                "node": { "$ref": "node.schema.json" },
+                "dispatches": {
+                  "type": "array",
+                  "items": { "$ref": "dispatch.schema.json" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "issues": { "type": "array", "items": { "$ref": "issue.schema.json" } },
+    "issue_edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["issue_ref", "tree", "node_ref", "source", "source_ref"],
+        "properties": {
+          "issue_ref": { "type": "string", "pattern": "^I-[0-9]+$" },
+          "tree": { "type": "string", "minLength": 1 },
+          "node_ref": { "type": "string", "minLength": 1 },
+          "source": { "enum": ["minted_from", "issue_ref"] },
+          "source_ref": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

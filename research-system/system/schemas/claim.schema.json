@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/claim.schema.json",
+  "$comment": "A1 §4 claim — epistemic domain, verifier-authored only. proposed_tier vs granted_tier makes the demotion rate computable (A1 §9). granted<=proposed is a B4 §9 semantic check, enforced in ht.",
+  "title": "claim",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "node", "source_dispatch", "text", "proposed_tier", "granted_tier", "standing_class", "revalidation", "anchors", "epoch", "status"],
+  "$defs": {
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "start_line", "end_line"],
+      "properties": {
+        "path": { "type": "string" },
+        "start_line": { "type": "integer", "minimum": 1 },
+        "end_line": { "type": "integer", "minimum": 1 }
+      }
+    }
+  },
+  "properties": {
+    "id": { "type": "string", "$comment": "A1 §4 — c-<node>-<N>" },
+    "node": { "type": "string" },
+    "source_dispatch": { "type": "string" },
+    "text": { "type": "string", "$comment": "A1 §4 — scope-explicit statement" },
+    "proposed_tier": { "type": "integer", "minimum": 1, "maximum": 3, "$comment": "A1 §4 — what the senior asked for" },
+    "granted_tier": { "type": "integer", "minimum": 1, "maximum": 3, "$comment": "A1 §4 — what adjudication awarded" },
+    "standing_class": {
+      "$comment": "Coherence amendments §10 evidence classing — sandbox/slice evidence measures a different system and must be re-validated against trunk before merge.",
+      "enum": ["trunk", "sandbox", "slice"]
+    },
+    "revalidation": {
+      "$comment": "Coherence amendments §10 — verifier-owned, null at creation, and fill-once under the disposition principle (third application; gate_verdict precedent).",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["date", "epoch", "ref"],
+          "properties": {
+            "date": { "type": "string" },
+            "epoch": { "type": "integer", "minimum": 0 },
+            "ref": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "anchors": {
+      "$comment": "A1 §4 / B4 §9 — mandatory, >=1 resolvable anchor (concept §9 citation discipline)",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/anchor" }
+    },
+    "epoch": { "type": "integer", "minimum": 0 },
+    "instruments": { "type": "array", "items": { "type": "string" }, "$comment": "A1 §4 — e.g. ['suite-S@v3', 'rubric-R2@v1']" },
+    "status": { "enum": ["granted", "superseded", "contradicted"], "$comment": "A1 §4 — post-merge watch can contradict" }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hypothesis-tree.local/runtime/control-response.schema.json",
+  "$defs": {"uuid": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"}},
+  "oneOf": [
+    {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "status", "control_id", "target_daemon_incarnation_id"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-control-response/1.0.0"}, "status": {"const": "accepted"}, "control_id": {"$ref": "#/$defs/uuid"}, "target_daemon_incarnation_id": {"$ref": "#/$defs/uuid"}}
+    },
+    {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "status", "control_id", "target_daemon_incarnation_id", "reason_code"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-control-response/1.0.0"}, "status": {"const": "rejected"}, "control_id": {"$ref": "#/$defs/uuid"}, "target_daemon_incarnation_id": {"$ref": "#/$defs/uuid"}, "reason_code": {"const": "stale-daemon-incarnation"}}
+    }
+  ]
+}

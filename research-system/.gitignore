@@ -1,0 +1,21 @@
+# Archives are write-once via `ht archive write` and live outside git.
+trees/*/nodes/*/archive/
+
+# Transient subject-repository worktrees.
+worktrees/*
+!worktrees/.gitkeep
+
+# Global merge and ledger-write mutex.
+.ht-global.lock
+
+# Private transcript fixtures are never public repository content.
+fixtures/
+
+# Durable but uncommitted runtime artifacts.
+var/
+
+# Python
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/ledger_union_index.schema.json",
+  "$comment": "Item 1 W3: harness-generated deterministic union view over all ledger books. This artifact is generated and uncitable; cite the canonical ledger entry at each path instead.",
+  "title": "ledger_union_index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["generated", "citable", "entries"],
+  "properties": {
+    "generated": { "const": true },
+    "citable": { "const": false },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "book", "section", "path", "text", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "book": { "type": "string", "minLength": 1 },
+          "section": { "enum": ["user", "research", "observatory"] },
+          "path": { "type": "string", "minLength": 1 },
+          "text": { "type": "string" },
+          "status": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["state"],
+            "properties": {
+              "state": { "enum": ["open", "minted", "retired", "merged-into"] },
+              "ref": { "type": ["string", "null"] },
+              "reason": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

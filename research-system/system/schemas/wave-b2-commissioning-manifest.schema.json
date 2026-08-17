@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree.local/wave-b2-commissioning-manifest.schema.json",
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"},
+    "entry": {"type": "object", "additionalProperties": false, "required": ["relative_path", "mode", "sha256", "bytes"], "properties": {"relative_path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*[\\u0000-\\u001f\\u007f])(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*\\\\).+$"}, "mode": {"type": "string", "pattern": "^0[0-7]{3}$"}, "sha256": {"$ref": "#/$defs/sha"}, "bytes": {"type": "integer", "minimum": 0}}}
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "commissioning_id", "result_sha256", "entries", "entries_sha256", "created_at"],
+  "properties": {
+    "schema_version": {"const": "hypothesis-tree-wave-b2-commissioning-manifest/1.0.0"},
+    "commissioning_id": {"const": "wave-b2-owned-role-v1"},
+    "result_sha256": {"$ref": "#/$defs/sha"},
+    "entries": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/entry"}, "uniqueItems": true},
+    "entries_sha256": {"$ref": "#/$defs/sha"},
+    "created_at": {"$ref": "#/$defs/timestamp"}
+  }
+}

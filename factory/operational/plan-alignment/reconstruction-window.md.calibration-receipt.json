@@ -1,0 +1,13 @@
+{
+  "artifact": "operational/plan-alignment/reconstruction-window.md",
+  "calibration_record_ref": "reconstruction-window.md.calibration-record.json",
+  "fingerprint": "719180af955acba82011c56bfdedae5a4c7abd600cfb2b4aaf71524fc6d2327d",
+  "holder": "production-dispatch",
+  "owner_address": "owner+director",
+  "schema_version": 1,
+  "stamp": {
+    "bytes": 2650,
+    "present": true,
+    "sha256": "719180af955acba82011c56bfdedae5a4c7abd600cfb2b4aaf71524fc6d2327d"
+  }
+}

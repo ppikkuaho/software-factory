@@ -1,0 +1,13 @@
+{
+  "artifact": "operational/review-checks/performance-robustness.md",
+  "calibration_record_ref": "performance-robustness.md.calibration-record.json",
+  "fingerprint": "b4823b26eca7dc75659165c138c9627c747a906f37b2125190da1fe667d58fde",
+  "holder": "production-dispatch",
+  "owner_address": "owner+director",
+  "schema_version": 1,
+  "stamp": {
+    "bytes": 3917,
+    "present": true,
+    "sha256": "b4823b26eca7dc75659165c138c9627c747a906f37b2125190da1fe667d58fde"
+  }
+}

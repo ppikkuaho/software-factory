@@ -1,0 +1,26 @@
+{
+  "authored_at": "2026-07-24T18:22:17.675007+00:00",
+  "channel": "product_probe_calibration",
+  "channel_evidence": {
+    "participants": [
+      "owner",
+      "fable-l1-l5-director"
+    ],
+    "ratification_record": "design/working-notes/CALIBRATION-SESSION-2026-07-24.md",
+    "ratification_sha256": "b9e129b2da648fcd7f3775a0e4da6c1f7f366c14857eba37231fe6c30bfd886c",
+    "runtime_reconciliation": {
+      "model_pattern": "literal/driving seats use GPT-5.6 Sol; judgment seats use Opus 5.0",
+      "reason": "the removed Claude-Code proxy path cannot serve Sol; config-only attribution is forbidden",
+      "ruling": "director-approved narrow serving-plumbing reconciliation after Q7",
+      "sol_runtime": "codex"
+    }
+  },
+  "contract_path": "operational/review-checks/performance-robustness.md",
+  "new_fingerprint": "b4823b26eca7dc75659165c138c9627c747a906f37b2125190da1fe667d58fde",
+  "owner_address": "owner+director",
+  "prior_fingerprint": "249c3e0fb23288f3f209a3955e17c469f7d94c5c395df9451acb7dba3699fcd2",
+  "ratified_at": "2026-07-24T18:22:17.675007+00:00",
+  "reason": "Apply the exact 2026-07-24 joint calibration to instruction version 2",
+  "revision_id": "instruction-calibration-b230055ecbc898b8bd35f5a0c29561d1",
+  "schema_version": 1
+}

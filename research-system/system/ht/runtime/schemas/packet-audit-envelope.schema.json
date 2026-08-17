@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hypothesis-tree.local/runtime/packet-audit-envelope.schema.json",
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "packet", "packet_relative_path", "packet_sha256", "lifecycle", "outcome", "validated_artifacts"],
+  "properties": {"schema_version": {"const": "hypothesis-tree-runtime-packet-audit-envelope/1.0.0"}, "packet": {"type": "object"}, "packet_relative_path": {"type": "string", "minLength": 1}, "packet_sha256": {"$ref": "#/$defs/sha"}, "lifecycle": {"enum": ["claimed", "abandoned", "starting", "running", "terminal"]}, "outcome": {"oneOf": [{"enum": ["SUCCEEDED", "FAILED", "crashed"]}, {"type": "null"}]}, "validated_artifacts": {"type": "array", "items": {"enum": ["launch", "started", "ready", "result", "terminal", "process-exit"]}, "uniqueItems": true}}
+}

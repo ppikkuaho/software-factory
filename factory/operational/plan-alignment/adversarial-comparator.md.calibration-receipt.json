@@ -1,0 +1,13 @@
+{
+  "artifact": "operational/plan-alignment/adversarial-comparator.md",
+  "calibration_record_ref": "adversarial-comparator.md.calibration-record.json",
+  "fingerprint": "ddd81e567598c55fba327de19fc9adb8e02ee0cf2cfce3b0a3428f198ba9b1b8",
+  "holder": "production-dispatch",
+  "owner_address": "owner+director",
+  "schema_version": 1,
+  "stamp": {
+    "bytes": 2766,
+    "present": true,
+    "sha256": "ddd81e567598c55fba327de19fc9adb8e02ee0cf2cfce3b0a3428f198ba9b1b8"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/issue_queue.schema.json",
+  "$comment": "CURRENT-STATE only; history lives in the decision log; material re-ranks are logged decisions per PC §5.",
+  "title": "issue_queue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["entries"],
+  "properties": {
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["issue_ref", "rank", "date"],
+        "properties": {
+          "issue_ref": { "type": "string", "pattern": "^I-[0-9]+$" },
+          "rank": { "type": "integer", "minimum": 1 },
+          "triage_note": { "type": "string", "minLength": 1 },
+          "date": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

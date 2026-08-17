@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/node.schema.json",
+  "$comment": "A1 §2 node — NAVIGATION (director) + GIT BINDING (harness) + EPISTEMIC (verifier) domains. Claims and measurements are EMBEDDED in node.json per A2 §2 layout. status enum drops 'active' (A1 §2.1 v2); standing is DP-3's five states.",
+  "title": "node",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "parent", "premise", "minted_from", "status", "standing"],
+  "$defs": {
+    "anchor": {
+      "$comment": "A1 §4 / B4 §9 — {path (research-root-relative), start_line, end_line}. Resolvability (file exists, 1<=start<=end<=line-count) is a semantic check in ht, not schema.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "start_line", "end_line"],
+      "properties": {
+        "path": { "type": "string" },
+        "start_line": { "type": "integer", "minimum": 1 },
+        "end_line": { "type": "integer", "minimum": 1 }
+      }
+    }
+  },
+  "properties": {
+    "id": { "type": "string", "$comment": "A1 §2 DP-1 positional id e.g. '2.3.1'" },
+    "parent": { "type": ["string", "null"] },
+    "premise": { "type": "string", "$comment": "A1 §2 — the question/bet this node explores" },
+    "minted_from": {
+      "$comment": "A1 §2 + coherence amendments §4 — existing provenance forms remain legal; values beginning issue# must be canonical issue#I-<n> refs.",
+      "type": "string",
+      "anyOf": [
+        { "pattern": "^issue#I-[0-9]+$" },
+        { "pattern": "^(?!issue#).*$" }
+      ]
+    },
+    "supersedes": { "type": ["string", "null"], "$comment": "A1 §2 DP-1 v2 mint-to-replace lineage" },
+    "superseded_by_node": { "type": ["string", "null"] },
+    "status": {
+      "$comment": "A1 §2.1 — no 'active'; cursor position lives only in tree.cursor",
+      "enum": ["unexplored", "worked", "parked", "closed", "merged"]
+    },
+    "status_reason": { "type": ["string", "null"] },
+    "conflicts": {
+      "$comment": "A1 §2 v2 — LIST (park/revive/re-park cycles). settlement=demoted carries demoted_to (ledger ref).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["parked_at_epoch", "superseded_by", "settlement", "demoted_to"],
+        "properties": {
+          "parked_at_epoch": { "type": "integer", "minimum": 0 },
+          "superseded_by": { "type": ["string", "null"] },
+          "settlement": { "enum": ["pending", "closed", "revived", "demoted"] },
+          "demoted_to": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "git_binding": {
+      "$comment": "A1 §2 v2 — harness-written; created at FIRST DISPATCH, not at mint. fork carries history (original/revived).",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["branch", "fork"],
+      "properties": {
+        "branch": { "type": "string" },
+        "fork": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["epoch", "reason"],
+            "properties": {
+              "epoch": { "type": "integer", "minimum": 0 },
+              "reason": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "standing": {
+      "$comment": "A1 §2 DP-3 — five states; contested is a director flag, not a resting state (B4 §5)",
+      "enum": ["untested", "supported", "weakened", "refuted", "contested"]
+    },
+    "standing_note": { "type": ["string", "null"], "$comment": "A1 §2 — mandatory rationale citing claims/children (B4 §5); also carries watch annotations" },
+    "claims": {
+      "$comment": "A1 §4 — EMBEDDED per A2 §2",
+      "type": "array",
+      "items": { "$ref": "claim.schema.json" }
+    },
+    "measurements": {
+      "$comment": "A1 §4 — EMBEDDED per A2 §2",
+      "type": "array",
+      "items": { "$ref": "measurement.schema.json" }
+    },
+    "learnings_out": { "type": "array", "items": { "type": "string" } }
+  }
+}

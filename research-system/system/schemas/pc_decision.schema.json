@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/pc_decision.schema.json",
+  "$comment": "Tier-1 PC decision log record. Files are append-only under the pre-commit guard.",
+  "title": "pc_decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "date", "kind", "decision", "context_refs"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^PCD-[0-9]+$" },
+    "date": { "type": "string" },
+    "kind": {
+      "enum": [
+        "triage",
+        "re-rank",
+        "activation-proposal",
+        "sub-goal",
+        "close-settle",
+        "merge-schedule",
+        "escalation",
+        "interrupt-receipt"
+      ]
+    },
+    "decision": { "type": "string" },
+    "context_refs": { "type": "array", "items": { "type": "string" } },
+    "ref": { "type": "string", "minLength": 1 }
+  }
+}

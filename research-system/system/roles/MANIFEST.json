@@ -1,0 +1,159 @@
+{
+  "$comment": "Role-packet manifest (A3 §1/§2 — role packets are versioned + hashed; the hash is what dispatch records bind to via A1 §3 role_packet {version, hash} in Phase 3 runtime). v0-draft: DOCUMENTS ONLY — no dispatch has run under any packet; not executable.",
+  "provenance": "director-provisional-2026-07-07",
+  "v1_provenance": "RQ-4/P9-directed rebuild 2026-07-13",
+  "v1_ratification": "RQ-8/RQ-9 delegated user edit pass 2026-07-14; activation-gated PC handholding",
+  "mechanical_scope": "v1 block checks prove conformance only; packet quality remains a judgment gate",
+  "hash_algorithm": "sha256",
+  "hash_basis": "full packet file bytes (utf-8, as committed, including front-matter)",
+  "block_registry": {
+    "negative-result-is-real": {
+      "version": "v1",
+      "source": "blocks/negative-result-is-real.v1.md",
+      "duty": "a null, negative, or refuting finding remains successful research when supported",
+      "carriers": [
+        {"role": "senior"},
+        {"role": "junior"},
+        {"role": "checker"},
+        {"role": "verifier"}
+      ]
+    },
+    "no-claim-inflation-never-iterate-to-positive": {
+      "version": "v1",
+      "source": "blocks/no-claim-inflation-never-iterate-to-positive.v1.md",
+      "duty": "never distort a finding or iterate merely to obtain a positive-looking outcome",
+      "carriers": [
+        {"role": "senior"},
+        {"role": "junior"},
+        {"role": "checker"},
+        {"role": "verifier"}
+      ]
+    },
+    "unit-never-writes-tree-or-ledger": {
+      "version": "v1",
+      "source": "blocks/unit-never-writes-tree-or-ledger.v1.md",
+      "duty": "the producing unit never writes shared epistemic state; the verifier is the independent counterpart and writes only through ht",
+      "variants": {
+        "verifier-counterpart": "blocks/verifier-writes-epistemic-state-via-ht.v1.md"
+      },
+      "variant_reason": "the verifier carries the positive counterpart authority, so a named adaptation preserves one conceptual boundary without giving unit seats verifier powers",
+      "carriers": [
+        {"role": "senior"},
+        {"role": "junior"},
+        {"role": "checker"},
+        {"role": "verifier", "variant": "verifier-counterpart"}
+      ]
+    },
+    "completion-reporting-honesty": {
+      "version": "v1",
+      "source": "blocks/completion-reporting-honesty.v1.md",
+      "duty": "completion and the unit reporting path preserve done, failed, and skipped states honestly",
+      "carriers": [
+        {"role": "senior"},
+        {"role": "junior"}
+      ]
+    }
+  },
+  "packets": [
+    {
+      "role": "senior",
+      "version": "v0-draft",
+      "file": "senior.v0-draft.md",
+      "sha256": "2177d383d555fcdd674f6873d6f40aaf56360966e5c6a34632d5617281e53f41",
+      "bytes": 3756
+    },
+    {
+      "role": "junior",
+      "version": "v0-draft",
+      "file": "junior.v0-draft.md",
+      "sha256": "2d392b6dde7f06a28159fe5bc705e5fe5e6980c074a0461693c5f9e1ffb66b34",
+      "bytes": 2872
+    },
+    {
+      "role": "checker",
+      "version": "v0-draft",
+      "file": "checker.v0-draft.md",
+      "sha256": "3a758285c1be7b3637bba8b94b1be80a9ff5049ce63311963dba90ef0b2ff320",
+      "bytes": 3119
+    },
+    {
+      "role": "verifier",
+      "version": "v0-draft",
+      "file": "verifier.v0-draft.md",
+      "sha256": "09f1b07688a8499551eccd677fd52f22e98facc550d0a1e63c28497b50b77e50",
+      "bytes": 5141
+    },
+    {
+      "role": "senior",
+      "version": "v1",
+      "file": "senior.v1.md",
+      "sha256": "469807e2ba414c8d97a204c2326c08ae813ef9294b6c4f364c5e82cf5b4b53fe",
+      "bytes": 7066,
+      "provenance": ["P9", "RQ-4", "REVIEW-PACKET-STYLE §(b) senior"],
+      "blocks": [
+        {"name": "completion-reporting-honesty", "version": "v1"},
+        {"name": "unit-never-writes-tree-or-ledger", "version": "v1"},
+        {"name": "negative-result-is-real", "version": "v1"},
+        {"name": "no-claim-inflation-never-iterate-to-positive", "version": "v1"}
+      ]
+    },
+    {
+      "role": "junior",
+      "version": "v1",
+      "file": "junior.v1.md",
+      "sha256": "5e48b8d3357fae0ec0b4b67aa561ba0fa92a59b70e122dda2b70bb381a842c72",
+      "bytes": 5342,
+      "provenance": ["P9", "RQ-4", "REVIEW-PACKET-STYLE §(b) junior"],
+      "blocks": [
+        {"name": "completion-reporting-honesty", "version": "v1"},
+        {"name": "unit-never-writes-tree-or-ledger", "version": "v1"},
+        {"name": "negative-result-is-real", "version": "v1"},
+        {"name": "no-claim-inflation-never-iterate-to-positive", "version": "v1"}
+      ]
+    },
+    {
+      "role": "checker",
+      "version": "v1",
+      "file": "checker.v1.md",
+      "sha256": "7249e63e3403e215d300bfbefcb35eb00638ccfdf27a1b3c2ccac635dc1b5fbc",
+      "bytes": 4965,
+      "provenance": ["P9", "RQ-4", "REVIEW-PACKET-STYLE §(b) checker"],
+      "blocks": [
+        {"name": "unit-never-writes-tree-or-ledger", "version": "v1"},
+        {"name": "negative-result-is-real", "version": "v1"},
+        {"name": "no-claim-inflation-never-iterate-to-positive", "version": "v1"}
+      ]
+    },
+    {
+      "role": "verifier",
+      "version": "v1",
+      "file": "verifier.v1.md",
+      "sha256": "cc586fbe1999fe72f9e91f0d75403766c08b5cb302b250b2ab0a10d8c07800e9",
+      "bytes": 6628,
+      "provenance": ["P9", "RQ-4", "REVIEW-PACKET-STYLE §(b) verifier", "B4-derived-procedure rider"],
+      "blocks": [
+        {"name": "unit-never-writes-tree-or-ledger", "version": "v1", "variant": "verifier-counterpart"},
+        {"name": "negative-result-is-real", "version": "v1"},
+        {"name": "no-claim-inflation-never-iterate-to-positive", "version": "v1"}
+      ]
+    },
+    {
+      "role": "principal-coordinator",
+      "version": "v1",
+      "file": "principal-coordinator.v1.md",
+      "sha256": "f58a40d6f6c6b88799aa50d3f9cd50b84ad42aa4688acf4bdf438a6f6659f1fa",
+      "bytes": 9556,
+      "provenance": ["P9", "PC", "R-i6-2", "F10", "F11"],
+      "blocks": []
+    },
+    {
+      "role": "l4-director",
+      "version": "v1",
+      "file": "l4-director.v1.md",
+      "sha256": "267008c5b9b56a3ea1b5d3993558112248bc79f5159231fc63b4d02feec0df31",
+      "bytes": 6998,
+      "provenance": ["wave-b2", "owned-role-runtime", "L4-navigation"],
+      "blocks": []
+    }
+  ]
+}

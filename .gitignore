@@ -1,0 +1,35 @@
+# Factory runtime artifacts
+/factory/runtime/
+/factory/.runtime/
+/factory/.runtime-obs/
+/factory/.eval-tmp/
+
+# Pinned runtime installs and generated state
+/factory/.cc-pinned/
+/factory/vendor/claude-code/
+/factory/.codex-pinned/
+/factory/**/.cc-pinned/
+/factory/$HARNESS/
+
+# Operator's per-deployment profile; never commit it
+/factory/operational/shared/user-profile.md
+
+# Research-system runtime state
+/research-system/trees/*/nodes/*/archive/
+/research-system/worktrees/*
+!/research-system/worktrees/.gitkeep
+/research-system/.ht-global.lock
+/research-system/var/
+/research-system/fixtures/
+
+# Python, Node, and OS artifacts
+**/__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+**/.venv/
+**/venv/
+**/.pytest_cache/
+**/node_modules/
+.DS_Store
+*.log

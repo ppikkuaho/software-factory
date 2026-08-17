@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/phase.schema.json",
+  "$comment": "Tier-1 PC authority phase. Absence means sign-off; only the user may set this document.",
+  "title": "phase",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mode", "set_by", "date"],
+  "properties": {
+    "mode": { "enum": ["sign-off", "autonomy"] },
+    "set_by": { "type": "string" },
+    "date": { "type": "string" }
+  }
+}

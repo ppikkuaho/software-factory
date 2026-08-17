@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Tracked PROTOTYPE for one run-scoped harnessd job. harnessd.lifecycle renders the sentinels below
+  into <runtime-root>/.harnessd/lifecycle/com.harness.daemon.plist, then bootstraps that exact file
+  on demand from `harnessctl start`.
+
+  KeepAlive.SuccessfulExit=false restarts only a crash/nonzero exit. There is deliberately NO
+  RunAtLoad: no login-resident daemon exists. A definitive idle build exits 0, then its bounded
+  cleanup child boots this per-run job out and removes the rendered plist. ThrottleInterval=10 is
+  the crash-loop floor while the build is live.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>__HARNESSD_LABEL__</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>__HARNESSD_PYTHON__</string>
+        <string>-m</string>
+        <string>harnessd.daemon</string>
+        <string>--runtime-root</string>
+        <string>__HARNESSD_RUNTIME_ROOT__</string>
+        <string>--build-id</string>
+        <string>__HARNESSD_BUILD_ID__</string>
+        <string>--start-request</string>
+        <string>__HARNESSD_START_REQUEST__</string>
+        <string>--request-id</string>
+        <string>__HARNESSD_REQUEST_ID__</string>
+        <string>--launchd-label</string>
+        <string>__HARNESSD_LABEL__</string>
+        <string>--launchd-plist</string>
+        <string>__HARNESSD_RUN_PLIST__</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>__HARNESSD_REPO_ROOT__</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>__HARNESSD_PATH__</string>
+        <key>HARNESSD_TMUX</key>
+        <string>__HARNESSD_TMUX__</string>
+        <key>HARNESSD_GIT</key>
+        <string>__HARNESSD_GIT__</string>
+        <key>HARNESSD_SANDBOX_EXEC</key>
+        <string>__HARNESSD_SANDBOX_EXEC__</string>
+        <key>HARNESSD_SECURITY</key>
+        <string>__HARNESSD_SECURITY__</string>
+        <key>HARNESSD_PYTHON</key>
+        <string>__HARNESSD_PYTHON__</string>
+    </dict>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <key>StandardOutPath</key>
+    <string>__HARNESSD_STDOUT__</string>
+
+    <key>StandardErrorPath</key>
+    <string>__HARNESSD_STDERR__</string>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

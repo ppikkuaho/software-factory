@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/tree.schema.json",
+  "$comment": "A1 §5 tree-level state. epoch is advanced MECHANICALLY by the merge gate (harness). cursor is a list-with-capacity-1 (capacity enforced by ht, not schema). decision_log/cursor are director-authored; epoch/epoch_history harness; global_learnings verifier; watch_queue rows harness.",
+  "title": "tree",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["component", "root_question", "epoch", "epoch_history", "cursor", "decision_log", "global_learnings", "watch_queue"],
+  "properties": {
+    "component": { "type": "string" },
+    "root_question": { "type": "string" },
+    "epoch": { "type": "integer", "minimum": 0, "$comment": "A1 §5 — advanced mechanically by the merge gate" },
+    "epoch_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["epoch", "merged_node", "date", "user_ratified"],
+        "properties": {
+          "epoch": { "type": "integer", "minimum": 0 },
+          "merged_node": { "type": "string" },
+          "date": { "type": "string" },
+          "user_ratified": {
+            "$comment": "A1 §5 — true/false for guidance-promoting merges, 'n/a' otherwise",
+            "oneOf": [{ "type": "boolean" }, { "const": "n/a" }]
+          }
+        }
+      }
+    },
+    "cursor": {
+      "$comment": "A1 §5 v2 — list-with-capacity-1; parallelism later = capacity change (no schema change)",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["node", "allocation"],
+        "properties": {
+          "node": { "type": "string" },
+          "allocation": { "type": "string" }
+        }
+      }
+    },
+    "decision_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["move", "from", "to", "target", "allocation", "rationale", "refs", "epoch", "date"],
+        "properties": {
+          "move": { "type": "string" },
+          "from": { "type": ["string", "null"] },
+          "to": { "type": ["string", "null"] },
+          "target": { "type": ["string", "null"], "$comment": "A1 §5 — for moves that don't move the cursor (scout, recall, mint, ledger ops)" },
+          "allocation": { "type": ["string", "null"] },
+          "rationale": { "type": "string" },
+          "refs": { "type": "array", "items": { "type": "string" }, "$comment": "A1 §5 — evidence links" },
+          "epoch": { "type": "integer", "minimum": 0 },
+          "date": { "type": "string" }
+        }
+      }
+    },
+    "global_learnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "text", "tier3_claim_ref", "origin_nodes", "director_approved", "user_ratified"],
+        "properties": {
+          "id": { "type": "string" },
+          "text": { "type": "string" },
+          "tier3_claim_ref": { "type": ["string", "null"] },
+          "origin_nodes": { "type": "array", "items": { "type": "string" } },
+          "director_approved": { "type": "boolean" },
+          "user_ratified": { "oneOf": [{ "type": "boolean" }, { "const": "n/a" }] }
+        }
+      }
+    },
+    "watch_queue": {
+      "$comment": "A1 §5 / §9 — existing prediction watches use open/resolved; item 1 merge mechanically appends queued staleness-assessment rows to every other tree for its owning lane director to assess later.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "merged_node", "prediction_claim", "observed", "verdict", "severity", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "merged_node": { "type": "string" },
+          "prediction_claim": { "type": ["string", "null"] },
+          "observed": { "type": ["string", "null"] },
+          "verdict": { "oneOf": [{ "type": "null" }, { "enum": ["confirmed", "under-delivered", "regressed"] }] },
+          "severity": { "type": ["string", "null"] },
+          "status": { "enum": ["open", "resolved", "queued"] },
+          "kind": { "const": "staleness-assessment" },
+          "epoch": { "type": "integer", "minimum": 0 }
+        },
+        "if": {
+          "properties": { "status": { "const": "queued" } },
+          "required": ["status"]
+        },
+        "then": {
+          "required": ["kind", "epoch"],
+          "properties": {
+            "prediction_claim": { "const": null },
+            "observed": { "const": null },
+            "verdict": { "const": null },
+            "severity": { "const": null }
+          }
+        }
+      }
+    }
+  }
+}

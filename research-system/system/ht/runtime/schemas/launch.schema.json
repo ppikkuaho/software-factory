@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hypothesis-tree.local/runtime/launch.schema.json",
+  "$defs": {"uuid": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"}, "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "runtime_id", "request_id", "binding_id", "node_address", "lease_epoch", "session_id", "role", "wrapper_instance_id", "helper_instance_id", "packet_relative_path", "packet_sha256", "entrypoint_token", "helper_entrypoint_token", "custody_protocol", "barrier_protocol"],
+  "properties": {
+    "schema_version": {"const": "hypothesis-tree-runtime-launch/1.0.0"}, "runtime_id": {"$ref": "#/$defs/uuid"}, "request_id": {"$ref": "#/$defs/uuid"}, "binding_id": {"$ref": "#/$defs/uuid"}, "node_address": {"type": "string", "minLength": 1}, "lease_epoch": {"type": "integer", "minimum": 1}, "session_id": {"$ref": "#/$defs/uuid"}, "role": {"const": "synthetic-kernel-v1"}, "wrapper_instance_id": {"$ref": "#/$defs/uuid"}, "helper_instance_id": {"$ref": "#/$defs/uuid"}, "packet_relative_path": {"type": "string", "pattern": "^sessions/[0-9a-f-]+/packet\\.json$"}, "packet_sha256": {"$ref": "#/$defs/sha"}, "entrypoint_token": {"const": "ht-runtime-wrapper/1.0.0"}, "helper_entrypoint_token": {"const": "ht-runtime-synthetic-helper/1.0.0"}, "custody_protocol": {"const": "inherited-flock-open-description/1.0.0"}, "barrier_protocol": {"const": "private-pipe-start-token/1.0.0"}
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": "hypothesis-tree-producer-adapter-registry/1.0.0",
+  "adapters": [
+    {
+      "adapter_token": "codex-exec-fixed/1.0.0",
+      "transcript_format": "codex-exec-jsonl/0.144.1",
+      "binary": "/opt/homebrew/lib/node_modules/@openai/codex/node_modules/@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/bin/codex",
+      "binary_sha256": "29915529b97697def1a957b0505e770aa6a45744435d62fc263e98d7619e167a",
+      "version": "codex-cli 0.144.1",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "launcher_token": "ht-runtime-role-blocked-exec/1.0.0",
+      "launcher_repository_relpath": "system/instruments/runtime_role_producer_launcher.py",
+      "launcher_sha256": "3c5af060842af6698a904121b33a35deba63cbe9bcdf2d29f817b35d8d28f497",
+      "producer_return_schema": {
+        "repository_relpath": "system/schemas/producer-return.schema.json",
+        "sha256": "0c9258e593c13708dd6c1646cb6a2fc63ad036125a6ccdeff2bf74d354f2e673",
+        "bytes": 11881
+      },
+      "prompt_probe": {
+        "token": "codex-debug-prompt-input/0.144.1",
+        "sentinel": "SYNTHETIC-B2-PROMPT-INPUT-SENTINEL/1.0.0",
+        "vector_schema": "hypothesis-tree-codex-prompt-envelope-vector/1.0.0",
+        "envelope_prefix_sha256": "657e0ac04dcda3ca4d9a740720e9cab99f1ee296a33a7db0f0a2b4d269787ced",
+        "vector_sha256": "140ef81422cc382b19ad9f58f865709ae5a28ead3620d265dbb6a90437629ba6",
+        "row_roles": [
+          "developer",
+          "developer",
+          "user"
+        ],
+        "system_skill_tree_entries": 74,
+        "system_skill_tree_manifest_sha256": "e564689a50fec30528aba9c443838249b277765b7263669a14f697f4b63f6a78",
+        "system_skill_entrypoints": [
+          {
+            "name": "imagegen",
+            "relative_path": "skills/.system/imagegen/SKILL.md",
+            "sha256": "59981d23519222bcecf1be48bb37730bbc50539ceb0e35ad09fcef98a3df19d3",
+            "bytes": 24003
+          },
+          {
+            "name": "openai-docs",
+            "relative_path": "skills/.system/openai-docs/SKILL.md",
+            "sha256": "669a42ccf3323fe0ceda6e466730bcb05dddf1e0c220d6523ea504909fc49165",
+            "bytes": 18747
+          },
+          {
+            "name": "plugin-creator",
+            "relative_path": "skills/.system/plugin-creator/SKILL.md",
+            "sha256": "8fd56316b2c49cbdc657a5d197967a233018e1fada65b00a5dd030dce6499a6e",
+            "bytes": 11040
+          },
+          {
+            "name": "skill-creator",
+            "relative_path": "skills/.system/skill-creator/SKILL.md",
+            "sha256": "da44c88f6b3845a8fa8c60792ec9a722110a55a9793c279757b48fefb11f819c",
+            "bytes": 22047
+          },
+          {
+            "name": "skill-installer",
+            "relative_path": "skills/.system/skill-installer/SKILL.md",
+            "sha256": "d68b77e5bbb34dedab89d134da52855f140fc4b4299b80104f534e3b9e98f8ee",
+            "bytes": 3367
+          }
+        ]
+      }
+    }
+  ]
+}

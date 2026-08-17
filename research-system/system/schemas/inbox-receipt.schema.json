@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree.local/inbox-receipt.schema.json",
+  "$defs": {
+    "uuid": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"}
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "delivery_id", "subgoal_ref", "issue_ref", "lane", "profile_id", "task_package_ref", "task_package_sha256", "runtime_id", "request_id", "binding_id", "lease_epoch", "session_id", "fence", "packet_sha256", "source_receipt_sha256", "received_at"],
+  "properties": {
+    "schema_version": {"const": "hypothesis-tree-inbox-receipt/1.0.0"},
+    "delivery_id": {"type": "string", "pattern": "^IB-[1-9][0-9]*$"},
+    "subgoal_ref": {"type": "string", "pattern": "^subgoal#SG-[1-9][0-9]*$"},
+    "issue_ref": {"type": "string", "pattern": "^issue#I-[1-9][0-9]*$"},
+    "lane": {"const": "L4"},
+    "profile_id": {"const": "l4-director-v1"},
+    "task_package_ref": {"type": "string", "pattern": "^task-package#TP-[1-9][0-9]*$"},
+    "task_package_sha256": {"$ref": "#/$defs/sha"},
+    "runtime_id": {"$ref": "#/$defs/uuid"},
+    "request_id": {"$ref": "#/$defs/uuid"},
+    "binding_id": {"$ref": "#/$defs/uuid"},
+    "lease_epoch": {"type": "integer", "minimum": 1},
+    "session_id": {"$ref": "#/$defs/uuid"},
+    "fence": {"type": "string", "minLength": 1},
+    "packet_sha256": {"$ref": "#/$defs/sha"},
+    "source_receipt_sha256": {"$ref": "#/$defs/sha"},
+    "received_at": {"$ref": "#/$defs/timestamp"}
+  }
+}

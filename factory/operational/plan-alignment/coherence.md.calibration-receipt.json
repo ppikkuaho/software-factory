@@ -1,0 +1,13 @@
+{
+  "artifact": "operational/plan-alignment/coherence.md",
+  "calibration_record_ref": "coherence.md.calibration-record.json",
+  "fingerprint": "b1e2a99a73438c93028efd94784e2449ac486b6451ee6f47a60678972f0dd686",
+  "holder": "production-dispatch",
+  "owner_address": "owner+director",
+  "schema_version": 1,
+  "stamp": {
+    "bytes": 1943,
+    "present": true,
+    "sha256": "b1e2a99a73438c93028efd94784e2449ac486b6451ee6f47a60678972f0dd686"
+  }
+}

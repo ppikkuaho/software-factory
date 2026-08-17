@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree.local/runtime/admission-response.schema.json",
+  "$defs": {
+    "uuid": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "accepted": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "status", "request_id", "binding_id", "node_address", "lease_epoch", "session_id", "packet_sha256", "recovery_created"],
+      "properties": {
+        "schema_version": {"const": "hypothesis-tree-runtime-admission-response/1.0.0"}, "status": {"const": "accepted"},
+        "request_id": {"$ref": "#/$defs/uuid"}, "binding_id": {"$ref": "#/$defs/uuid"}, "node_address": {"type": "string", "minLength": 1},
+        "lease_epoch": {"type": "integer", "minimum": 1}, "session_id": {"$ref": "#/$defs/uuid"}, "packet_sha256": {"$ref": "#/$defs/sha"}, "recovery_created": {"type": "boolean"}
+      }
+    },
+    "duplicate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "status", "request_id", "original_request_id", "binding_id", "node_address", "lease_epoch", "session_id", "packet_sha256"],
+      "properties": {
+        "schema_version": {"const": "hypothesis-tree-runtime-admission-response/1.0.0"}, "status": {"const": "duplicate"},
+        "request_id": {"$ref": "#/$defs/uuid"}, "original_request_id": {"$ref": "#/$defs/uuid"}, "binding_id": {"$ref": "#/$defs/uuid"}, "node_address": {"type": "string", "minLength": 1},
+        "lease_epoch": {"type": "integer", "minimum": 1}, "session_id": {"$ref": "#/$defs/uuid"}, "packet_sha256": {"$ref": "#/$defs/sha"}
+      }
+    },
+    "rejected": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "status", "request_id", "reason_code"],
+      "properties": {
+        "schema_version": {"const": "hypothesis-tree-runtime-admission-response/1.0.0"}, "status": {"const": "rejected"},
+        "request_id": {"$ref": "#/$defs/uuid"}, "reason_code": {"type": "string", "pattern": "^[a-z0-9-]+$"}
+      }
+    }
+  },
+  "oneOf": [{"$ref": "#/$defs/accepted"}, {"$ref": "#/$defs/duplicate"}, {"$ref": "#/$defs/rejected"}]
+}

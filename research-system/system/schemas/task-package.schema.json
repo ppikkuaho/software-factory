@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree.local/task-package.schema.json",
+  "$defs": {
+    "uuid": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"},
+    "nonempty": {"type": "string", "minLength": 1},
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*[\\u0000-\\u001f\\u007f])(?!\\.$)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*\\\\).+$"},
+    "nullable_path": {"oneOf": [{"$ref": "#/$defs/path"}, {"type": "null"}]},
+    "null_workspace": {"type": "object", "properties": {"plan_ref": {"type": "null"}, "report_ref": {"type": "null"}, "archive_ref": {"type": "null"}, "qa_ref": {"type": "null"}}},
+    "full_workspace": {"type": "object", "properties": {"plan_ref": {"$ref": "#/$defs/nonempty"}, "report_ref": {"$ref": "#/$defs/nonempty"}, "archive_ref": {"$ref": "#/$defs/nonempty"}, "qa_ref": {"$ref": "#/$defs/nonempty"}}},
+    "semantic_brief": {
+      "type": "object", "additionalProperties": false,
+      "required": ["title", "objective", "done_definition", "constraints", "context_refs"],
+      "properties": {
+        "title": {"$ref": "#/$defs/nonempty"},
+        "objective": {"$ref": "#/$defs/nonempty"},
+        "done_definition": {"$ref": "#/$defs/nonempty"},
+        "constraints": {"type": "array", "items": {"$ref": "#/$defs/nonempty"}, "uniqueItems": true},
+        "context_refs": {"type": "array", "items": {"$ref": "#/$defs/nonempty"}, "uniqueItems": true}
+      }
+    },
+    "reference_row": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ref", "repository_relpath", "sha256", "bytes", "projection_schema_version", "projection_sha256", "projection_bytes", "use_when"],
+      "properties": {
+        "ref": {"$ref": "#/$defs/nonempty"},
+        "repository_relpath": {"$ref": "#/$defs/path"},
+        "sha256": {"$ref": "#/$defs/sha"},
+        "bytes": {"type": "integer", "minimum": 0},
+        "projection_schema_version": {"$ref": "#/$defs/nonempty"},
+        "projection_sha256": {"$ref": "#/$defs/sha"},
+        "projection_bytes": {"type": "integer", "minimum": 0},
+        "use_when": {"$ref": "#/$defs/nonempty"}
+      }
+    },
+    "workspace": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository_root", "worktree", "branch", "plan_ref", "report_ref", "archive_ref", "qa_ref"],
+      "properties": {
+        "repository_root": {"const": "."},
+        "worktree": {"$ref": "#/$defs/nullable_path"},
+        "branch": {"oneOf": [{"$ref": "#/$defs/nonempty"}, {"type": "null"}]},
+        "plan_ref": {"oneOf": [{"$ref": "#/$defs/nonempty"}, {"type": "null"}]},
+        "report_ref": {"oneOf": [{"$ref": "#/$defs/nonempty"}, {"type": "null"}]},
+        "archive_ref": {"oneOf": [{"$ref": "#/$defs/nonempty"}, {"type": "null"}]},
+        "qa_ref": {"oneOf": [{"$ref": "#/$defs/nonempty"}, {"type": "null"}]}
+      }
+    },
+    "output_action": {
+      "type": "object", "additionalProperties": false,
+      "required": ["action_kind", "required_output_slots", "optional_output_slots"],
+      "properties": {
+        "action_kind": {"enum": ["pc.route-subgoal", "pc.rerank-issue-queue", "pc.annotate-ratification", "pc.no-op", "director.create-dispatch", "director.raise-interrupt", "director.recall-dispatch", "senior.submit-plan", "senior.submit-report", "junior.return-unit-artifact", "checker.return-qa", "verifier.adjudicate-report"]},
+        "required_output_slots": {"type": "array", "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"}, "uniqueItems": true},
+        "optional_output_slots": {"type": "array", "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"}, "uniqueItems": true}
+      }
+    },
+    "output_slot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["slot", "kind", "destination_ref", "destination_relpath", "media_type", "max_bytes"],
+      "properties": {
+        "slot": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"},
+        "kind": {"enum": ["plan", "report", "unit", "qa"]},
+        "destination_ref": {"$ref": "#/$defs/nonempty"},
+        "destination_relpath": {"$ref": "#/$defs/path"},
+        "media_type": {"const": "text/markdown; charset=utf-8"},
+        "max_bytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "output_contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "actions", "slots", "terminal_outcomes"],
+      "properties": {
+        "schema_version": {"const": "hypothesis-tree-role-output-contract/1.0.0"},
+        "actions": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/output_action"}, "uniqueItems": true},
+        "slots": {"type": "array", "items": {"$ref": "#/$defs/output_slot"}, "uniqueItems": true},
+        "terminal_outcomes": {"type": "array", "prefixItems": [{"const": "SUCCEEDED"}, {"const": "FAILED"}, {"const": "crashed"}], "items": false, "minItems": 3, "maxItems": 3}
+      }
+    },
+    "fence_row": {
+      "type": "object", "additionalProperties": false,
+      "required": ["task_package_ref", "profile_id", "request_id", "attempt", "binding_id", "lease_epoch", "session_id", "fence", "lifecycle", "outcome"],
+      "properties": {
+        "task_package_ref": {"type": "string", "pattern": "^task-package#TP-[1-9][0-9]*$"},
+        "profile_id": {"enum": ["principal-coordinator-v1", "l4-director-v1", "senior-v1", "junior-v1", "checker-v1", "verifier-v1"]},
+        "request_id": {"$ref": "#/$defs/uuid"},
+        "attempt": {"type": "integer", "minimum": 1},
+        "binding_id": {"$ref": "#/$defs/uuid"},
+        "lease_epoch": {"type": "integer", "minimum": 1},
+        "session_id": {"$ref": "#/$defs/uuid"},
+        "fence": {"$ref": "#/$defs/nonempty"},
+        "lifecycle": {"enum": ["claimed", "abandoned", "starting", "running", "terminal"]},
+        "outcome": {"oneOf": [{"enum": ["SUCCEEDED", "FAILED", "crashed"]}, {"type": "null"}]}
+      }
+    },
+    "verifier_fence_set": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "dispatch_ref", "affiliated_task_package_refs", "rows", "rows_sha256"],
+      "properties": {
+        "schema_version": {"const": "hypothesis-tree-verifier-fence-set/1.0.0"},
+        "dispatch_ref": {"type": "string", "pattern": "^tree#L4/dispatch#d-[1-9][0-9]*(?:\\.[1-9][0-9]*)*-[1-9][0-9]*$"},
+        "affiliated_task_package_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^task-package#TP-[1-9][0-9]*$"}, "uniqueItems": true},
+        "rows": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/fence_row"}, "uniqueItems": true},
+        "rows_sha256": {"$ref": "#/$defs/sha"}
+      }
+    },
+    "coordination_precondition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["issue_queue_ref", "issue_queue_schema_version", "issue_queue_raw_sha256", "issue_queue_canonical_json"],
+      "properties": {
+        "issue_queue_ref": {"const": "issue-queue#current"},
+        "issue_queue_schema_version": {"$ref": "#/$defs/nonempty"},
+        "issue_queue_raw_sha256": {"$ref": "#/$defs/sha"},
+        "issue_queue_canonical_json": {"type": "string", "minLength": 2, "pattern": "\\n$"}
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "package_id", "package_kind", "role_profile_id", "target_ref", "issue_ref", "subgoal_ref", "dispatch_ref", "semantic_brief", "reference_map", "workspace", "output_contract", "verifier_fence_set", "coordination_precondition", "prompt_sha256", "action_contract_sha256", "source_action_ref", "created_at"],
+  "properties": {
+    "schema_version": {"const": "hypothesis-tree-task-package/1.0.0"},
+    "package_id": {"type": "string", "pattern": "^TP-[1-9][0-9]*$"},
+    "package_kind": {"enum": ["pc-wake", "director-inbox", "senior-plan", "senior-report", "junior-task", "checker-qa", "verifier-adjudication"]},
+    "role_profile_id": {"enum": ["principal-coordinator-v1", "l4-director-v1", "senior-v1", "junior-v1", "checker-v1", "verifier-v1"]},
+    "target_ref": {"$ref": "#/$defs/nonempty"},
+    "issue_ref": {"oneOf": [{"type": "string", "pattern": "^issue#I-[1-9][0-9]*$"}, {"type": "null"}]},
+    "subgoal_ref": {"oneOf": [{"type": "string", "pattern": "^subgoal#SG-[1-9][0-9]*$"}, {"type": "null"}]},
+    "dispatch_ref": {"oneOf": [{"type": "string", "pattern": "^tree#L4/dispatch#d-[1-9][0-9]*(?:\\.[1-9][0-9]*)*-[1-9][0-9]*$"}, {"type": "null"}]},
+    "semantic_brief": {"$ref": "#/$defs/semantic_brief"},
+    "reference_map": {"type": "array", "items": {"$ref": "#/$defs/reference_row"}, "uniqueItems": true},
+    "workspace": {"$ref": "#/$defs/workspace"},
+    "output_contract": {"$ref": "#/$defs/output_contract"},
+    "verifier_fence_set": {"oneOf": [{"$ref": "#/$defs/verifier_fence_set"}, {"type": "null"}]},
+    "coordination_precondition": {"oneOf": [{"$ref": "#/$defs/coordination_precondition"}, {"type": "null"}]},
+    "prompt_sha256": {"$ref": "#/$defs/sha"},
+    "action_contract_sha256": {"$ref": "#/$defs/sha"},
+    "source_action_ref": {"oneOf": [{"type": "string", "pattern": "^action-receipt#AR-[1-9][0-9]*$"}, {"type": "null"}]},
+    "created_at": {"$ref": "#/$defs/timestamp"}
+  },
+  "allOf": [
+    {"if": {"properties": {"package_kind": {"const": "pc-wake"}}, "required": ["package_kind"]}, "then": {"properties": {"role_profile_id": {"const": "principal-coordinator-v1"}, "coordination_precondition": {"$ref": "#/$defs/coordination_precondition"}}}, "else": {"properties": {"coordination_precondition": {"type": "null"}}}},
+    {"if": {"properties": {"package_kind": {"const": "director-inbox"}}, "required": ["package_kind"]}, "then": {"properties": {"role_profile_id": {"const": "l4-director-v1"}}}},
+    {"if": {"properties": {"package_kind": {"enum": ["senior-plan", "senior-report"]}}, "required": ["package_kind"]}, "then": {"properties": {"role_profile_id": {"const": "senior-v1"}}}},
+    {"if": {"properties": {"package_kind": {"const": "junior-task"}}, "required": ["package_kind"]}, "then": {"properties": {"role_profile_id": {"const": "junior-v1"}}}},
+    {"if": {"properties": {"package_kind": {"const": "checker-qa"}}, "required": ["package_kind"]}, "then": {"properties": {"role_profile_id": {"const": "checker-v1"}}}},
+    {"if": {"properties": {"package_kind": {"const": "verifier-adjudication"}}, "required": ["package_kind"]}, "then": {"properties": {"role_profile_id": {"const": "verifier-v1"}, "verifier_fence_set": {"$ref": "#/$defs/verifier_fence_set"}}}, "else": {"properties": {"verifier_fence_set": {"type": "null"}}}},
+    {"oneOf": [
+      {"properties": {"package_kind": {"const": "pc-wake"}, "target_ref": {"const": "pc#principal-coordinator"}, "issue_ref": {"type": "null"}, "subgoal_ref": {"type": "null"}, "dispatch_ref": {"type": "null"}, "source_action_ref": {"type": "null"}, "workspace": {"$ref": "#/$defs/null_workspace"}, "output_contract": {"type": "object", "properties": {"actions": {"type": "array", "minItems": 4, "maxItems": 4, "prefixItems": [{"properties": {"action_kind": {"const": "pc.route-subgoal"}}}, {"properties": {"action_kind": {"const": "pc.rerank-issue-queue"}}}, {"properties": {"action_kind": {"const": "pc.annotate-ratification"}}}, {"properties": {"action_kind": {"const": "pc.no-op"}}}], "items": false}, "slots": {"type": "array", "maxItems": 0}}}}},
+      {"properties": {"package_kind": {"const": "director-inbox"}, "target_ref": {"type": "string", "pattern": "^subgoal#SG-[1-9][0-9]*$"}, "issue_ref": {"type": "string"}, "subgoal_ref": {"type": "string"}, "dispatch_ref": {"type": "null"}, "source_action_ref": {"type": "string"}, "workspace": {"$ref": "#/$defs/null_workspace"}, "output_contract": {"type": "object", "properties": {"actions": {"type": "array", "minItems": 3, "maxItems": 3, "prefixItems": [{"properties": {"action_kind": {"const": "director.create-dispatch"}}}, {"properties": {"action_kind": {"const": "director.raise-interrupt"}}}, {"properties": {"action_kind": {"const": "director.recall-dispatch"}}}], "items": false}, "slots": {"type": "array", "maxItems": 0}}}}},
+      {"properties": {"package_kind": {"const": "senior-plan"}, "target_ref": {"type": "string", "pattern": "^tree#L4/dispatch#"}, "issue_ref": {"type": "string"}, "subgoal_ref": {"type": "string"}, "dispatch_ref": {"type": "string"}, "source_action_ref": {"type": "string"}, "workspace": {"$ref": "#/$defs/full_workspace"}, "output_contract": {"type": "object", "properties": {"actions": {"type": "array", "minItems": 1, "maxItems": 1, "prefixItems": [{"properties": {"action_kind": {"const": "senior.submit-plan"}, "required_output_slots": {"const": ["plan"]}, "optional_output_slots": {"maxItems": 0}}}], "items": false}, "slots": {"type": "array", "minItems": 1, "maxItems": 1, "prefixItems": [{"properties": {"slot": {"const": "plan"}, "kind": {"const": "plan"}}}], "items": false}}}}},
+      {"properties": {"package_kind": {"const": "junior-task"}, "target_ref": {"type": "string", "pattern": "^tree#L4/dispatch#"}, "issue_ref": {"type": "string"}, "subgoal_ref": {"type": "string"}, "dispatch_ref": {"type": "string"}, "source_action_ref": {"type": "string"}, "workspace": {"$ref": "#/$defs/full_workspace"}, "output_contract": {"type": "object", "properties": {"actions": {"type": "array", "minItems": 1, "maxItems": 1, "prefixItems": [{"properties": {"action_kind": {"const": "junior.return-unit-artifact"}, "required_output_slots": {"minItems": 1}, "optional_output_slots": {"maxItems": 0}}}], "items": false}, "slots": {"type": "array", "minItems": 1, "items": {"properties": {"kind": {"const": "unit"}}}}}}}},
+      {"properties": {"package_kind": {"const": "checker-qa"}, "target_ref": {"type": "string", "pattern": "^tree#L4/dispatch#"}, "issue_ref": {"type": "string"}, "subgoal_ref": {"type": "string"}, "dispatch_ref": {"type": "string"}, "source_action_ref": {"type": "string"}, "workspace": {"$ref": "#/$defs/full_workspace"}, "output_contract": {"type": "object", "properties": {"actions": {"type": "array", "minItems": 1, "maxItems": 1, "prefixItems": [{"properties": {"action_kind": {"const": "checker.return-qa"}, "required_output_slots": {"const": ["qa"]}, "optional_output_slots": {"maxItems": 0}}}], "items": false}, "slots": {"type": "array", "minItems": 1, "maxItems": 1, "prefixItems": [{"properties": {"slot": {"const": "qa"}, "kind": {"const": "qa"}}}], "items": false}}}}},
+      {"properties": {"package_kind": {"const": "senior-report"}, "target_ref": {"type": "string", "pattern": "^tree#L4/dispatch#"}, "issue_ref": {"type": "string"}, "subgoal_ref": {"type": "string"}, "dispatch_ref": {"type": "string"}, "source_action_ref": {"type": "string"}, "workspace": {"$ref": "#/$defs/full_workspace"}, "output_contract": {"type": "object", "properties": {"actions": {"type": "array", "minItems": 1, "maxItems": 1, "prefixItems": [{"properties": {"action_kind": {"const": "senior.submit-report"}, "required_output_slots": {"const": ["report"]}, "optional_output_slots": {"maxItems": 0}}}], "items": false}, "slots": {"type": "array", "minItems": 1, "maxItems": 1, "prefixItems": [{"properties": {"slot": {"const": "report"}, "kind": {"const": "report"}}}], "items": false}}}}},
+      {"properties": {"package_kind": {"const": "verifier-adjudication"}, "target_ref": {"type": "string", "pattern": "^tree#L4/dispatch#"}, "issue_ref": {"type": "string"}, "subgoal_ref": {"type": "string"}, "dispatch_ref": {"type": "string"}, "source_action_ref": {"type": "string"}, "workspace": {"$ref": "#/$defs/full_workspace"}, "output_contract": {"type": "object", "properties": {"actions": {"type": "array", "minItems": 1, "maxItems": 1, "prefixItems": [{"properties": {"action_kind": {"const": "verifier.adjudicate-report"}, "required_output_slots": {"maxItems": 0}, "optional_output_slots": {"maxItems": 0}}}], "items": false}, "slots": {"type": "array", "maxItems": 0}}}}}
+    ]}
+  ]
+}

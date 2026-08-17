@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/index.schema.json",
+  "$comment": "A1 §6 index / detail split. Per-node: id, premise_line, status, standing, latest_fork_epoch, unsettled_conflict; tree-level: cursor, epoch. index.json is the full depth-ordered canonical index; index.live.json is the same shape plus dead-subtree rollup markers (both canonical, regenerated wholesale from node.json by ht — J7).",
+  "title": "index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cursor", "epoch", "nodes"],
+  "properties": {
+    "cursor": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["node", "allocation"],
+        "properties": {
+          "node": { "type": "string" },
+          "allocation": { "type": "string" }
+        }
+      }
+    },
+    "epoch": { "type": "integer", "minimum": 0 },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "premise_line", "status", "standing", "latest_fork_epoch", "unsettled_conflict"],
+        "properties": {
+          "id": { "type": "string" },
+          "premise_line": { "type": "string" },
+          "status": { "enum": ["unexplored", "worked", "parked", "closed", "merged"] },
+          "standing": { "enum": ["untested", "supported", "weakened", "refuted", "contested"] },
+          "latest_fork_epoch": { "type": ["integer", "null"] },
+          "unsettled_conflict": { "type": "boolean" },
+          "rollup": {
+            "$comment": "A1 §6 — live view only: a fully-dead subtree (all closed/merged) collapses to its root line carrying this marker",
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "properties": {
+              "collapsed": { "type": "integer", "minimum": 0 },
+              "closed": { "type": "integer", "minimum": 0 },
+              "merged": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

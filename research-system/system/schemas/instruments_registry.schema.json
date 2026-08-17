@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/instruments_registry.schema.json",
+  "$comment": "Instruments registry (A1 §11.1 / B4 §3 / U1). suites carry id + version + noise_floor + invocation + epoch legality window. Shipped as an EMPTY stub in Phase 0; populated with the first tree's suites in Phase 3. The verifier reads it for epoch/instrument legality (B4 §9).",
+  "title": "instruments_registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["suites"],
+  "properties": {
+    "suites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "version", "noise_floor", "invocation", "epochs"],
+        "properties": {
+          "id": { "type": "string" },
+          "version": { "type": "string" },
+          "noise_floor": { "type": ["number", "null"] },
+          "invocation": { "type": "string" },
+          "epochs": {
+            "$comment": "legality window; to=null means open-ended",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "to"],
+            "properties": {
+              "from": { "type": "integer", "minimum": 0 },
+              "to": { "type": ["integer", "null"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

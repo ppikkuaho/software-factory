@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree.local/runtime/checkpoint-role.schema.json",
+  "$defs": {
+    "uuid": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "index": {"type": "object"},
+    "binding": {"type": "object", "required": ["node_address"], "properties": {"node_address": {"type": "string", "minLength": 1}}},
+    "tail": {
+      "type": "object", "additionalProperties": false,
+      "required": ["reason", "byte_offset", "discarded_byte_count", "discarded_sha256"],
+      "properties": {
+        "reason": {"type": "string", "minLength": 1},
+        "byte_offset": {"type": "integer", "minimum": 0},
+        "discarded_byte_count": {"type": "integer", "minimum": 1},
+        "discarded_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "runtime_id", "last_seq", "clean_wal_sha256", "daemon_incarnation_id", "request_index", "dedup_index", "session_index", "control_index", "bindings", "binding_ledger_sha256", "final_tail", "role_capability_sha256", "upgrade_base_seq", "upgrade_base_clean_wal_sha256", "upgrade_base_checkpoint_sha256", "upgrade_base_binding_ledger_sha256"],
+  "properties": {
+    "schema_version": {"const": "hypothesis-tree-runtime-checkpoint/2.0.0"},
+    "runtime_id": {"$ref": "#/$defs/uuid"},
+    "last_seq": {"type": "integer", "minimum": 0},
+    "clean_wal_sha256": {"$ref": "#/$defs/sha256"},
+    "daemon_incarnation_id": {"oneOf": [{"$ref": "#/$defs/uuid"}, {"type": "null"}]},
+    "request_index": {"$ref": "#/$defs/index"},
+    "dedup_index": {"$ref": "#/$defs/index"},
+    "session_index": {"$ref": "#/$defs/index"},
+    "control_index": {"$ref": "#/$defs/index"},
+    "bindings": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/binding"}},
+    "binding_ledger_sha256": {"$ref": "#/$defs/sha256"},
+    "final_tail": {"oneOf": [{"$ref": "#/$defs/tail"}, {"type": "null"}]},
+    "role_capability_sha256": {"$ref": "#/$defs/sha256"},
+    "upgrade_base_seq": {"type": "integer", "minimum": 0},
+    "upgrade_base_clean_wal_sha256": {"$ref": "#/$defs/sha256"},
+    "upgrade_base_checkpoint_sha256": {"$ref": "#/$defs/sha256"},
+    "upgrade_base_binding_ledger_sha256": {"$ref": "#/$defs/sha256"}
+  }
+}

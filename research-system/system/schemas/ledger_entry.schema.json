@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/ledger_entry.schema.json",
+  "$comment": "A1 §7 ledger entry (DP-4). Field-level write partition: user-section creation = user; research/observatory creation + support/echoes/dedup = verifier; status transitions = director (user override). echoes make every support increment traceable — never a bare counter. D8 is RATIFIED as inform-don't-block. The union screen is its mechanical realization, not a supersession: the create SURFACES candidates and requires an explicit disposition from the same authorized caller (--dedup-distinct with dedup_log events, or abandon-and-echo) — nothing is refused, nothing ever auto-merges, the decision is merely made explicit and traceable by the authority who was going to make it anyway. If the screen ever blocks legitimate flow in live use, that is a revisit-D8-realization signal to surface, never a rule to route around.",
+  "title": "ledger_entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "section", "text", "proposed_by", "support_count", "echoes", "cross_refs", "dedup_log", "status", "anchors", "lane"],
+  "$defs": {
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "start_line", "end_line"],
+      "properties": {
+        "path": { "type": "string" },
+        "start_line": { "type": "integer", "minimum": 1 },
+        "end_line": { "type": "integer", "minimum": 1 }
+      }
+    }
+  },
+  "properties": {
+    "id": { "type": "string", "pattern": "^L-[0-9]+$", "$comment": "A1 §7 — union-global L-<n>" },
+    "section": { "enum": ["user", "research", "observatory"] },
+    "text": { "type": "string", "minLength": 1, "$comment": "A1 §7 — the hypothesis/idea, scope-explicit. D8 Phase-B provisional matcher: lowercase alphanumeric token sets, stopwords removed; candidate iff shared-token intersection >= min(2, len(shorter token set))." },
+    "proposed_by": { "type": ["string", "null"], "$comment": "A1 §7 — user | report#... | claim#... | observation#... | settlement#node-..." },
+    "support_count": { "type": "integer", "minimum": 0 },
+    "echoes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_ref", "epoch"],
+        "properties": {
+          "source_ref": { "type": "string" },
+          "epoch": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "cross_refs": { "type": "array", "items": { "type": "string" } },
+    "dedup_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["matched", "resolution"],
+        "properties": {
+          "matched": { "type": "string", "minLength": 1, "$comment": "For resolution=distinct this is an existing L-<n> surfaced by the union screen; for resolution=merged this is the abandoned proposal's source_ref." },
+          "resolution": { "enum": ["distinct", "merged"] }
+        }
+      }
+    },
+    "status": {
+      "$comment": "A1 §7 — {state, ref, reason}. state transitions are director-owned.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": { "enum": ["open", "minted", "retired", "merged-into"] },
+        "ref": { "type": ["string", "null"] },
+        "reason": { "type": ["string", "null"] }
+      }
+    },
+    "anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } },
+    "component": { "type": ["string", "null"], "$comment": "A2 §5 — one shared ledger; optional component tag" },
+    "lane": { "type": ["string", "null"], "$comment": "Item 1 book provenance: the assigned verifier lane at creation; null for user/harness creation. Strict top-book LCA validation is the named item-2 seam." },
+    "intended_scope": { "type": ["string", "null"], "$comment": "Item-2 fallback debt marker: when the issue LCA lane has no live tree, records the top-book entry's intended scope for later re-homing." }
+  }
+}

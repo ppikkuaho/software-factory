@@ -1,0 +1,9 @@
+{
+  "version": "screen-config.v1",
+  "thresholds": {
+    "k_last_merged": 5,
+    "surface_budget_max_diff_lines": 500,
+    "surface_budget_max_cumulative_directives": 10,
+    "queue_adjacency_min_pending": 2
+  }
+}

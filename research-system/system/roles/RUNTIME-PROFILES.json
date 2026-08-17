@@ -1,0 +1,77 @@
+{
+  "schema_version": "hypothesis-tree-role-profile-registry/1.0.0",
+  "profiles": [
+    {
+      "profile_id": "principal-coordinator-v1",
+      "authority_role": "pc",
+      "level": "top",
+      "role_packet": {"ref": "repository-file#system/roles/principal-coordinator.v1.md", "version": "v1", "sha256": "f58a40d6f6c6b88799aa50d3f9cd50b84ad42aa4688acf4bdf438a6f6659f1fa"},
+      "procedure": null,
+      "package_kinds": ["pc-wake"],
+      "action_kinds": ["pc.route-subgoal", "pc.rerank-issue-queue", "pc.annotate-ratification", "pc.no-op"],
+      "runner_token": "ht-runtime-profile-runner/1.0.0",
+      "producer_adapter_token": "codex-exec-fixed/1.0.0",
+      "transcript_format": "codex-exec-jsonl/0.144.1"
+    },
+    {
+      "profile_id": "l4-director-v1",
+      "authority_role": "director",
+      "level": "L4",
+      "role_packet": {"ref": "repository-file#system/roles/l4-director.v1.md", "version": "v1", "sha256": "267008c5b9b56a3ea1b5d3993558112248bc79f5159231fc63b4d02feec0df31"},
+      "procedure": null,
+      "package_kinds": ["director-inbox"],
+      "action_kinds": ["director.create-dispatch", "director.raise-interrupt", "director.recall-dispatch"],
+      "runner_token": "ht-runtime-profile-runner/1.0.0",
+      "producer_adapter_token": "codex-exec-fixed/1.0.0",
+      "transcript_format": "codex-exec-jsonl/0.144.1"
+    },
+    {
+      "profile_id": "senior-v1",
+      "authority_role": "unit",
+      "level": "L4",
+      "role_packet": {"ref": "repository-file#system/roles/senior.v1.md", "version": "v1", "sha256": "469807e2ba414c8d97a204c2326c08ae813ef9294b6c4f364c5e82cf5b4b53fe"},
+      "procedure": null,
+      "package_kinds": ["senior-plan", "senior-report"],
+      "action_kinds": ["senior.submit-plan", "senior.submit-report"],
+      "runner_token": "ht-runtime-profile-runner/1.0.0",
+      "producer_adapter_token": "codex-exec-fixed/1.0.0",
+      "transcript_format": "codex-exec-jsonl/0.144.1"
+    },
+    {
+      "profile_id": "junior-v1",
+      "authority_role": "unit",
+      "level": "L4",
+      "role_packet": {"ref": "repository-file#system/roles/junior.v1.md", "version": "v1", "sha256": "5e48b8d3357fae0ec0b4b67aa561ba0fa92a59b70e122dda2b70bb381a842c72"},
+      "procedure": null,
+      "package_kinds": ["junior-task"],
+      "action_kinds": ["junior.return-unit-artifact"],
+      "runner_token": "ht-runtime-profile-runner/1.0.0",
+      "producer_adapter_token": "codex-exec-fixed/1.0.0",
+      "transcript_format": "codex-exec-jsonl/0.144.1"
+    },
+    {
+      "profile_id": "checker-v1",
+      "authority_role": "unit",
+      "level": "L4",
+      "role_packet": {"ref": "repository-file#system/roles/checker.v1.md", "version": "v1", "sha256": "7249e63e3403e215d300bfbefcb35eb00638ccfdf27a1b3c2ccac635dc1b5fbc"},
+      "procedure": null,
+      "package_kinds": ["checker-qa"],
+      "action_kinds": ["checker.return-qa"],
+      "runner_token": "ht-runtime-profile-runner/1.0.0",
+      "producer_adapter_token": "codex-exec-fixed/1.0.0",
+      "transcript_format": "codex-exec-jsonl/0.144.1"
+    },
+    {
+      "profile_id": "verifier-v1",
+      "authority_role": "verifier",
+      "level": "L4",
+      "role_packet": {"ref": "repository-file#system/roles/verifier.v1.md", "version": "v1", "sha256": "cc586fbe1999fe72f9e91f0d75403766c08b5cb302b250b2ab0a10d8c07800e9"},
+      "procedure": {"ref": "repository-file#system/roles/verifier-procedure.v1.md", "version": "v1", "sha256": "378b69f6a591fa62d846d4e333aea9ba1053c181eeaa7a7b7a0bc0bcdc480f27"},
+      "package_kinds": ["verifier-adjudication"],
+      "action_kinds": ["verifier.adjudicate-report"],
+      "runner_token": "ht-runtime-profile-runner/1.0.0",
+      "producer_adapter_token": "codex-exec-fixed/1.0.0",
+      "transcript_format": "codex-exec-jsonl/0.144.1"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/measurement.schema.json",
+  "$comment": "A1 §4 measurement — epistemic domain, verifier-authored only. Below-noise measurements carry noise_flag and license no claims; recorded, not discarded.",
+  "title": "measurement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["metric", "value", "epoch", "instrument", "noise_flag", "standing_class", "anchors"],
+  "$defs": {
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "start_line", "end_line"],
+      "properties": {
+        "path": { "type": "string" },
+        "start_line": { "type": "integer", "minimum": 1 },
+        "end_line": { "type": "integer", "minimum": 1 }
+      }
+    }
+  },
+  "properties": {
+    "metric": { "type": "string" },
+    "value": { "type": ["number", "string"] },
+    "epoch": { "type": "integer", "minimum": 0 },
+    "instrument": { "type": "string", "$comment": "A1 §4 — instrument@version" },
+    "noise_flag": { "type": "boolean" },
+    "standing_class": {
+      "$comment": "Coherence amendments §10 evidence classing — sandbox/slice evidence measures a different system and must be re-validated against trunk before merge. Revalidation objects are claim-only because the merge gate's unit of admission is the claim; revisit if a future gate admits measurements directly.",
+      "enum": ["trunk", "sandbox", "slice"]
+    },
+    "anchors": { "type": "array", "items": { "$ref": "#/$defs/anchor" } }
+  }
+}

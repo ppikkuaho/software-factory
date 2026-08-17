@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/merge_record.schema.json",
+  "$comment": "Tier-1 merge-record foundation. Work item 1 owns lane-verdict semantics; work item 7 owns merge screen, watch, reference, and date semantics and will tighten them.",
+  "title": "merge_record",
+  "type": "object",
+  "additionalProperties": false,
+  "dependentRequired": {
+    "lane_adjudication_ref": ["backing_claims"],
+    "backing_claims": ["lane_adjudication_ref"]
+  },
+  "required": [
+    "id",
+    "candidate_ref",
+    "lane_verdict",
+    "scope",
+    "screen",
+    "gate_verdict",
+    "watch_link",
+    "created",
+    "consumed_epoch"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^MR-[0-9]+$" },
+    "candidate_ref": {
+      "$comment": "Work item 7 owns candidate-reference semantics.",
+      "type": "string"
+    },
+    "lane_verdict": {
+      "$comment": "harness-authored = harness TRANSCRIBES the lane gate's outcome at screen time; the epistemic source remains the lane verifier's adjudication — never read as harness-decided.",
+      "type": "string",
+      "minLength": 1
+    },
+    "lane_adjudication_ref": {
+      "$comment": "Optional only for legacy records. New ht mrec create always writes the typed frozen lane adjudication identity.",
+      "type": "string",
+      "pattern": "^tree#[^/#\\s]+/adjudication#d-[1-9][0-9]*(\\.[1-9][0-9]*)*-[1-9][0-9]*-a[1-9][0-9]*$"
+    },
+    "backing_claims": {
+      "$comment": "Optional only for legacy records. New creates freeze complete eligible claim identities and their grant/demotion adjudications.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ref", "sha256", "adjudication_ref"],
+        "properties": {
+          "ref": {
+            "type": "string",
+            "pattern": "^tree#[^/#\\s]+/claim#c-[1-9][0-9]*(\\.[1-9][0-9]*)*-[1-9][0-9]*$"
+          },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "adjudication_ref": {
+            "type": "string",
+            "pattern": "^tree#[^/#\\s]+/adjudication#d-[1-9][0-9]*(\\.[1-9][0-9]*)*-[1-9][0-9]*-a[1-9][0-9]*$"
+          }
+        }
+      }
+    },
+    "scope": {
+      "$comment": "[R-i7-1] D1: harness-authored transcription from the candidate dispatch/report at creation. FROZEN at create; wrong scope is bounce-and-recreate, never an edit.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lane", "seats", "surfaces", "globs"],
+      "properties": {
+        "lane": { "type": "string", "minLength": 1 },
+        "seats": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "surfaces": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "globs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "screen": {
+      "$comment": "Work item 7 owns screen-result semantics and the rehashable W2 evidence identity. The identity fields are null at birth and filled atomically by ht mrec screen.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "results",
+        "output_ref",
+        "log_ref",
+        "log_sha256",
+        "output_sha256",
+        "computed",
+        "head_commit",
+        "head_tree",
+        "config_hash",
+        "engine_version"
+      ],
+      "oneOf": [
+        {
+          "$comment": "Birth state: the complete evidence identity is null.",
+          "properties": {
+            "output_ref": { "type": "null" },
+            "log_ref": { "type": "null" },
+            "log_sha256": { "type": "null" },
+            "output_sha256": { "type": "null" },
+            "computed": { "type": "null" },
+            "head_commit": { "type": "null" },
+            "head_tree": { "type": "null" },
+            "config_hash": { "type": "null" },
+            "engine_version": { "type": "null" }
+          }
+        },
+        {
+          "$comment": "Completed transcription: every identity field is filled, except the W2 error shape may have both snapshot OIDs null.",
+          "properties": {
+            "results": { "minItems": 5, "maxItems": 5 },
+            "output_ref": { "type": "string", "pattern": "^var/.+" },
+            "log_ref": { "type": "string", "pattern": "^var/.+" },
+            "log_sha256": { "type": "string" },
+            "output_sha256": { "type": "string" },
+            "computed": { "type": "string", "minLength": 1 },
+            "config_hash": { "type": "string", "minLength": 1 },
+            "engine_version": { "type": "string", "minLength": 1 }
+          },
+          "oneOf": [
+            {
+              "properties": {
+                "head_commit": { "type": "null" },
+                "head_tree": { "type": "null" }
+              }
+            },
+            {
+              "properties": {
+                "head_commit": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+                },
+                "head_tree": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "results": {
+          "$comment": "minItems is deliberately zero for the birth state. A verdict-eligible record needs a non-empty computed screen, enforced by ht mrec screen plus the shared W2 classifier.",
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["check", "result"],
+            "properties": {
+              "check": { "type": "string" },
+              "result": { "enum": ["pass", "fail", "n/a"] },
+              "detail": { "type": "string" },
+              "inputs": { "type": "object" }
+            }
+          }
+        },
+        "output_ref": { "type": ["string", "null"] },
+        "log_ref": { "type": ["string", "null"] },
+        "log_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "output_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "computed": { "type": ["string", "null"] },
+        "head_commit": { "type": ["string", "null"] },
+        "head_tree": { "type": ["string", "null"] },
+        "config_hash": { "type": ["string", "null"] },
+        "engine_version": { "type": ["string", "null"] }
+      }
+    },
+    "gate_verdict": {
+      "$comment": "null is the creation state and means awaiting verdict; the group, once present, is written by cgate atomically",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "verdict",
+            "date",
+            "review_ref",
+            "review_sha256",
+            "note"
+          ],
+          "properties": {
+            "verdict": {
+              "$comment": "Gate vocabulary (CG-P3, item 7 semantic owner): land / land-after-X / consolidate-first / bounce-for-surface-rework / hold / escalate-to-user / escalate-stuck. Schema stays permissive; item 7 owns semantics.",
+              "type": "string",
+              "minLength": 1
+            },
+            "date": { "type": "string", "minLength": 1 },
+            "review_ref": {
+              "type": "string",
+              "pattern": "^GR-[0-9]+$"
+            },
+            "review_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "note": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "watch_link": {
+      "$comment": "Work item 7 owns post-merge watch-link semantics.",
+      "type": ["string", "null"]
+    },
+    "created": {
+      "$comment": "Work item 7 owns creation-date semantics; item 0 mirrors the existing string date convention.",
+      "type": "string"
+    },
+    "consumed_epoch": {
+      "$comment": "Item 1 merge precondition stamp. null means unconsumed; ht fills the global epoch mechanically when this record is consumed by a land merge.",
+      "type": ["integer", "null"],
+      "minimum": 0
+    }
+  }
+}

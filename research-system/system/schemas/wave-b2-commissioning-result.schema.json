@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree.local/wave-b2-commissioning-result.schema.json",
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"}
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "commissioning_id", "instrumented_adoption", "fixture_version", "historical_item9_result_sha256", "role_capability_sha256", "command_log_sha256", "runtime_inventory_sha256", "leak_closures_sha256", "session_chain_sha256", "authority_negative_cases_sha256", "adoption_proof_sha256", "normal_path_proof_sha256", "zero_content_scan", "closed_leaks", "preserved_leaks", "completed_at"],
+  "properties": {
+    "schema_version": {"const": "hypothesis-tree-wave-b2-commissioning-result/1.0.0"},
+    "status": {"const": "COMPLETE"},
+    "commissioning_id": {"const": "wave-b2-owned-role-v1"},
+    "instrumented_adoption": {"const": true},
+    "fixture_version": {"const": "synthetic-b2/1.0.0"},
+    "historical_item9_result_sha256": {"$ref": "#/$defs/sha"},
+    "role_capability_sha256": {"$ref": "#/$defs/sha"},
+    "command_log_sha256": {"$ref": "#/$defs/sha"},
+    "runtime_inventory_sha256": {"$ref": "#/$defs/sha"},
+    "leak_closures_sha256": {"$ref": "#/$defs/sha"},
+    "session_chain_sha256": {"$ref": "#/$defs/sha"},
+    "authority_negative_cases_sha256": {"$ref": "#/$defs/sha"},
+    "adoption_proof_sha256": {"$ref": "#/$defs/sha"},
+    "normal_path_proof_sha256": {"$ref": "#/$defs/sha"},
+    "zero_content_scan": {"type": "object", "additionalProperties": false, "required": ["status", "files_scanned", "matches"], "properties": {"status": {"const": "pass"}, "files_scanned": {"type": "integer", "minimum": 1}, "matches": {"type": "array", "maxItems": 0}}},
+    "closed_leaks": {"type": "array", "prefixItems": [{"const": "L9-01"}, {"const": "L9-02"}, {"const": "L9-03"}, {"const": "L9-04"}, {"const": "L9-05"}, {"const": "L9-06"}], "items": false, "minItems": 6, "maxItems": 6},
+    "preserved_leaks": {"type": "array", "prefixItems": [{"const": "L9-09"}, {"const": "L9-11"}], "items": false, "minItems": 2, "maxItems": 2},
+    "completed_at": {"$ref": "#/$defs/timestamp"}
+  }
+}

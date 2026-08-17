@@ -1,0 +1,299 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree.local/runtime/role-wire.schema.json",
+  "$defs": {
+    "uuid": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "oid": {"type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"},
+    "nonempty": {"type": "string", "minLength": 1},
+    "nullable_sha": {"oneOf": [{"$ref": "#/$defs/sha"}, {"type": "null"}]},
+    "nullable_uuid": {"oneOf": [{"$ref": "#/$defs/uuid"}, {"type": "null"}]},
+    "repository_relpath": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*[\\u0000-\\u001f\\u007f])(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*\\\\).+$"},
+    "dispatch_ref": {"type": "string", "pattern": "^tree#L4/dispatch#d-[1-9][0-9]*(?:\\.[1-9][0-9]*)*-[1-9][0-9]*$"},
+    "profile": {"enum": ["principal-coordinator-v1", "l4-director-v1", "senior-v1", "junior-v1", "checker-v1", "verifier-v1"]},
+    "profile_identity": {"oneOf": [
+      {"properties": {"profile_id": {"const": "principal-coordinator-v1"}, "authority_role": {"const": "pc"}, "level": {"const": "top"}}},
+      {"properties": {"profile_id": {"const": "l4-director-v1"}, "authority_role": {"const": "director"}, "level": {"const": "L4"}}},
+      {"properties": {"profile_id": {"const": "senior-v1"}, "authority_role": {"const": "unit"}, "level": {"const": "L4"}}},
+      {"properties": {"profile_id": {"const": "junior-v1"}, "authority_role": {"const": "unit"}, "level": {"const": "L4"}}},
+      {"properties": {"profile_id": {"const": "checker-v1"}, "authority_role": {"const": "unit"}, "level": {"const": "L4"}}},
+      {"properties": {"profile_id": {"const": "verifier-v1"}, "authority_role": {"const": "verifier"}, "level": {"const": "L4"}}}
+    ]},
+    "role_packet": {"type": "object", "additionalProperties": false, "required": ["ref", "version", "sha256"], "properties": {"ref": {"type": "string", "pattern": "^repository-file#system/roles/.+\\.v1\\.md$"}, "version": {"const": "v1"}, "sha256": {"$ref": "#/$defs/sha"}}},
+    "procedure": {"oneOf": [{"$ref": "#/$defs/role_packet"}, {"type": "null"}]},
+    "session_common": {
+      "type": "object",
+      "required": ["schema_version", "runtime_id", "request_id", "binding_id", "lease_epoch", "session_id", "fence", "profile_id", "packet_sha256"],
+      "properties": {
+        "schema_version": {"type": "string"},
+        "runtime_id": {"$ref": "#/$defs/uuid"},
+        "request_id": {"$ref": "#/$defs/uuid"},
+        "binding_id": {"$ref": "#/$defs/uuid"},
+        "lease_epoch": {"type": "integer", "minimum": 1},
+        "session_id": {"$ref": "#/$defs/uuid"},
+        "fence": {"$ref": "#/$defs/nonempty"},
+        "profile_id": {"$ref": "#/$defs/profile"},
+        "packet_sha256": {"$ref": "#/$defs/sha"}
+      }
+    },
+    "role_capability": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "capability", "runtime_id", "runtime_schema_version", "role_request_schema_version", "upgrade_base_seq", "upgrade_base_clean_wal_sha256", "upgrade_base_checkpoint_sha256", "upgrade_base_binding_ledger_sha256", "created_at"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-capability/1.0.0"}, "capability": {"const": "owned-role-runtime-v1"}, "runtime_id": {"$ref": "#/$defs/uuid"}, "runtime_schema_version": {"const": "hypothesis-tree-runtime/1.0.0"}, "role_request_schema_version": {"const": "hypothesis-tree-runtime-role-request/2.0.0"}, "upgrade_base_seq": {"type": "integer", "minimum": 0}, "upgrade_base_clean_wal_sha256": {"$ref": "#/$defs/sha"}, "upgrade_base_checkpoint_sha256": {"$ref": "#/$defs/sha"}, "upgrade_base_binding_ledger_sha256": {"$ref": "#/$defs/sha"}, "created_at": {"$ref": "#/$defs/timestamp"}}
+    },
+    "role_initialization": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "runtime_id", "capability_canonical_json", "capability_sha256", "upgraded_checkpoint_canonical_json", "upgraded_checkpoint_sha256", "expected_directories", "created_at"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-initialization/1.0.0"}, "runtime_id": {"$ref": "#/$defs/uuid"}, "capability_canonical_json": {"type": "string", "minLength": 2, "pattern": "\\n$"}, "capability_sha256": {"$ref": "#/$defs/sha"}, "upgraded_checkpoint_canonical_json": {"type": "string", "minLength": 2, "pattern": "\\n$"}, "upgraded_checkpoint_sha256": {"$ref": "#/$defs/sha"}, "expected_directories": {"type": "array", "prefixItems": [{"const": "role-approval-requests"}, {"const": "role-approval-responses"}, {"const": "producers"}, {"const": "producers/codex"}, {"const": "producers/codex/bootstrap-home"}, {"const": "producers/codex/bootstrap-sqlite"}, {"const": "producers/codex/bootstrap-tmp"}, {"const": "producers/codex/prompt-probe-home"}], "items": false, "minItems": 8, "maxItems": 8}, "created_at": {"$ref": "#/$defs/timestamp"}}
+    },
+    "role_init_result": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "status", "runtime_id", "capability", "capability_sha256", "created_at"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-role-init-result/1.0.0"}, "status": {"enum": ["initialized", "existing", "repaired"]}, "runtime_id": {"$ref": "#/$defs/uuid"}, "capability": {"const": "owned-role-runtime-v1"}, "capability_sha256": {"$ref": "#/$defs/sha"}, "created_at": {"$ref": "#/$defs/timestamp"}}
+    },
+    "checkpoint": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "runtime_id", "last_seq", "clean_wal_sha256", "daemon_incarnation_id", "request_index", "dedup_index", "session_index", "control_index", "bindings", "binding_ledger_sha256", "final_tail", "role_capability_sha256", "upgrade_base_seq", "upgrade_base_clean_wal_sha256", "upgrade_base_checkpoint_sha256", "upgrade_base_binding_ledger_sha256"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-checkpoint/2.0.0"}, "runtime_id": {"$ref": "#/$defs/uuid"}, "last_seq": {"type": "integer", "minimum": 0}, "clean_wal_sha256": {"$ref": "#/$defs/sha"}, "daemon_incarnation_id": {"$ref": "#/$defs/nullable_uuid"}, "request_index": {"type": "object"}, "dedup_index": {"type": "object"}, "session_index": {"type": "object"}, "control_index": {"type": "object"}, "bindings": {"type": "object", "minProperties": 1}, "binding_ledger_sha256": {"$ref": "#/$defs/sha"}, "final_tail": {"oneOf": [{"type": "object"}, {"type": "null"}]}, "role_capability_sha256": {"$ref": "#/$defs/sha"}, "upgrade_base_seq": {"type": "integer", "minimum": 0}, "upgrade_base_clean_wal_sha256": {"$ref": "#/$defs/sha"}, "upgrade_base_checkpoint_sha256": {"$ref": "#/$defs/sha"}, "upgrade_base_binding_ledger_sha256": {"$ref": "#/$defs/sha"}}
+    },
+    "verifier_fence_set": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "dispatch_ref", "affiliated_task_package_refs", "rows", "rows_sha256"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-verifier-fence-set/1.0.0"}, "dispatch_ref": {"type": "string", "minLength": 1}, "affiliated_task_package_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^task-package#TP-[1-9][0-9]*$"}, "uniqueItems": true}, "rows": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["task_package_ref", "profile_id", "request_id", "attempt", "binding_id", "lease_epoch", "session_id", "fence", "lifecycle", "outcome"], "properties": {"task_package_ref": {"type": "string", "pattern": "^task-package#TP-[1-9][0-9]*$"}, "profile_id": {"$ref": "#/$defs/profile"}, "request_id": {"$ref": "#/$defs/uuid"}, "attempt": {"type": "integer", "minimum": 1}, "binding_id": {"$ref": "#/$defs/uuid"}, "lease_epoch": {"type": "integer", "minimum": 1}, "session_id": {"$ref": "#/$defs/uuid"}, "fence": {"$ref": "#/$defs/nonempty"}, "lifecycle": {"enum": ["claimed", "abandoned", "starting", "running", "terminal"]}, "outcome": {"oneOf": [{"enum": ["SUCCEEDED", "FAILED", "crashed"]}, {"type": "null"}]}}}}, "rows_sha256": {"$ref": "#/$defs/sha"}}
+    },
+    "role_request": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "request_id", "task_package_ref", "task_package_repository_relpath", "task_package_sha256", "task_package_head_blob_oid", "submission_repository_commit", "git_object_format", "profile_id", "role_packet", "procedure", "prompt_sha256", "action_contract_sha256", "verifier_fence_set_sha256", "inbox_delivery_ref", "inbox_delivery_sha256", "producer_adapter_token", "producer_launcher_token", "producer_launcher_sha256", "producer_return_schema_source_sha256", "producer_return_schema_copy_sha256", "transcript_format", "approval_required", "attempt", "retry_lineage", "created_at"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-request/2.0.0"}, "request_id": {"$ref": "#/$defs/uuid"}, "task_package_ref": {"type": "string", "pattern": "^task-package#TP-[1-9][0-9]*$"}, "task_package_repository_relpath": {"type": "string", "pattern": "^tier1/task-packages/TP-[1-9][0-9]*\\.json$"}, "task_package_sha256": {"$ref": "#/$defs/sha"}, "task_package_head_blob_oid": {"$ref": "#/$defs/oid"}, "submission_repository_commit": {"$ref": "#/$defs/oid"}, "git_object_format": {"enum": ["sha1", "sha256"]}, "profile_id": {"$ref": "#/$defs/profile"}, "role_packet": {"$ref": "#/$defs/role_packet"}, "procedure": {"$ref": "#/$defs/procedure"}, "prompt_sha256": {"$ref": "#/$defs/sha"}, "action_contract_sha256": {"$ref": "#/$defs/sha"}, "verifier_fence_set_sha256": {"$ref": "#/$defs/nullable_sha"}, "inbox_delivery_ref": {"oneOf": [{"type": "string", "pattern": "^inbox-delivery#IB-[1-9][0-9]*$"}, {"type": "null"}]}, "inbox_delivery_sha256": {"$ref": "#/$defs/nullable_sha"}, "producer_adapter_token": {"enum": ["codex-exec-fixed/1.0.0", "sealed-codex-fixture/1.0.0"]}, "producer_launcher_token": {"oneOf": [{"const": "ht-runtime-role-blocked-exec/1.0.0"}, {"type": "null"}]}, "producer_launcher_sha256": {"$ref": "#/$defs/nullable_sha"}, "producer_return_schema_source_sha256": {"$ref": "#/$defs/sha"}, "producer_return_schema_copy_sha256": {"$ref": "#/$defs/sha"}, "transcript_format": {"const": "codex-exec-jsonl/0.144.1"}, "approval_required": {"type": "boolean"}, "attempt": {"type": "integer", "minimum": 1}, "retry_lineage": {"type": "array", "items": {"$ref": "#/$defs/uuid"}, "uniqueItems": true}, "created_at": {"$ref": "#/$defs/timestamp"}},
+      "oneOf": [{"properties": {"producer_adapter_token": {"const": "codex-exec-fixed/1.0.0"}, "producer_launcher_token": {"const": "ht-runtime-role-blocked-exec/1.0.0"}, "producer_launcher_sha256": {"$ref": "#/$defs/sha"}, "approval_required": {"const": true}}}, {"properties": {"producer_adapter_token": {"const": "sealed-codex-fixture/1.0.0"}, "producer_launcher_token": {"type": "null"}, "producer_launcher_sha256": {"type": "null"}, "approval_required": {"const": false}}}],
+      "allOf": [
+        {"if": {"properties": {"profile_id": {"const": "verifier-v1"}}}, "then": {"properties": {"procedure": {"$ref": "#/$defs/role_packet"}, "verifier_fence_set_sha256": {"$ref": "#/$defs/sha"}}}, "else": {"properties": {"procedure": {"type": "null"}, "verifier_fence_set_sha256": {"type": "null"}}}},
+        {"if": {"properties": {"profile_id": {"const": "l4-director-v1"}}}, "then": {"properties": {"inbox_delivery_ref": {"type": "string"}, "inbox_delivery_sha256": {"$ref": "#/$defs/sha"}}}, "else": {"properties": {"inbox_delivery_ref": {"type": "null"}, "inbox_delivery_sha256": {"type": "null"}}}}
+      ]
+    },
+    "admission": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "status", "request_id", "binding_id", "node_address", "original_request_id", "original_binding_id", "lease_epoch", "session_id", "packet_sha256", "reason_code", "recovery_created"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-admission-response/2.0.0"}, "status": {"enum": ["accepted", "duplicate", "rejected"]}, "request_id": {"$ref": "#/$defs/uuid"}, "binding_id": {"$ref": "#/$defs/uuid"}, "node_address": {"type": "string", "pattern": "^runtime/[0-9a-f-]+#role$"}, "original_request_id": {"$ref": "#/$defs/nullable_uuid"}, "original_binding_id": {"$ref": "#/$defs/nullable_uuid"}, "lease_epoch": {"oneOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]}, "session_id": {"$ref": "#/$defs/nullable_uuid"}, "packet_sha256": {"$ref": "#/$defs/nullable_sha"}, "reason_code": {"oneOf": [{"$ref": "#/$defs/nonempty"}, {"type": "null"}]}, "recovery_created": {"oneOf": [{"type": "boolean"}, {"type": "null"}]}},
+      "oneOf": [
+        {"properties": {"status": {"const": "accepted"}, "original_request_id": {"type": "null"}, "original_binding_id": {"type": "null"}, "lease_epoch": {"type": "integer", "minimum": 1}, "session_id": {"$ref": "#/$defs/uuid"}, "packet_sha256": {"$ref": "#/$defs/sha"}, "reason_code": {"type": "null"}, "recovery_created": {"type": "boolean"}}},
+        {"properties": {"status": {"const": "duplicate"}, "original_request_id": {"$ref": "#/$defs/uuid"}, "original_binding_id": {"$ref": "#/$defs/uuid"}, "lease_epoch": {"type": "integer", "minimum": 1}, "session_id": {"$ref": "#/$defs/uuid"}, "packet_sha256": {"$ref": "#/$defs/sha"}, "reason_code": {"type": "null"}, "recovery_created": {"type": "null"}}},
+        {"properties": {"status": {"const": "rejected"}, "original_request_id": {"type": "null"}, "original_binding_id": {"type": "null"}, "lease_epoch": {"type": "null"}, "session_id": {"type": "null"}, "packet_sha256": {"type": "null"}, "reason_code": {"$ref": "#/$defs/nonempty"}, "recovery_created": {"type": "null"}}}
+      ]
+    },
+    "session_packet": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "runtime_id", "request_id", "binding_id", "node_address", "lease_epoch", "session_id", "fence", "profile_id", "authority_role", "level", "attempt", "retry_lineage", "task_package_ref", "task_package_sha256", "task_package_head_blob_oid", "submission_repository_commit", "admission_repository_commit", "git_object_format", "role_packet", "procedure", "prompt_sha256", "action_contract_sha256", "verifier_fence_set_sha256", "inbox_delivery_ref", "inbox_delivery_sha256", "producer_adapter_token", "producer_launcher_token", "producer_launcher_sha256", "producer_return_schema_source_sha256", "producer_return_schema_copy_sha256", "producer_home_manifest_sha256", "transcript_format", "approval_required", "approval_request_sha256", "approved_at", "wrapper_instance_id", "runner_instance_id", "packet_created_at"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-session-packet/2.0.0"}, "runtime_id": {"$ref": "#/$defs/uuid"}, "request_id": {"$ref": "#/$defs/uuid"}, "binding_id": {"$ref": "#/$defs/uuid"}, "node_address": {"type": "string", "minLength": 1}, "lease_epoch": {"type": "integer", "minimum": 1}, "session_id": {"$ref": "#/$defs/uuid"}, "fence": {"$ref": "#/$defs/nonempty"}, "profile_id": {"$ref": "#/$defs/profile"}, "authority_role": {"enum": ["pc", "director", "unit", "verifier"]}, "level": {"enum": ["top", "L4"]}, "attempt": {"type": "integer", "minimum": 1}, "retry_lineage": {"type": "array", "items": {"$ref": "#/$defs/uuid"}, "uniqueItems": true}, "task_package_ref": {"type": "string", "minLength": 1}, "task_package_sha256": {"$ref": "#/$defs/sha"}, "task_package_head_blob_oid": {"$ref": "#/$defs/oid"}, "submission_repository_commit": {"$ref": "#/$defs/oid"}, "admission_repository_commit": {"$ref": "#/$defs/oid"}, "git_object_format": {"enum": ["sha1", "sha256"]}, "role_packet": {"$ref": "#/$defs/role_packet"}, "procedure": {"$ref": "#/$defs/procedure"}, "prompt_sha256": {"$ref": "#/$defs/sha"}, "action_contract_sha256": {"$ref": "#/$defs/sha"}, "verifier_fence_set_sha256": {"$ref": "#/$defs/nullable_sha"}, "inbox_delivery_ref": {"oneOf": [{"type": "string", "pattern": "^inbox-delivery#IB-[1-9][0-9]*$"}, {"type": "null"}]}, "inbox_delivery_sha256": {"$ref": "#/$defs/nullable_sha"}, "producer_adapter_token": {"enum": ["codex-exec-fixed/1.0.0", "sealed-codex-fixture/1.0.0"]}, "producer_launcher_token": {"oneOf": [{"const": "ht-runtime-role-blocked-exec/1.0.0"}, {"type": "null"}]}, "producer_launcher_sha256": {"$ref": "#/$defs/nullable_sha"}, "producer_return_schema_source_sha256": {"$ref": "#/$defs/sha"}, "producer_return_schema_copy_sha256": {"$ref": "#/$defs/sha"}, "producer_home_manifest_sha256": {"$ref": "#/$defs/nullable_sha"}, "transcript_format": {"const": "codex-exec-jsonl/0.144.1"}, "approval_required": {"type": "boolean"}, "approval_request_sha256": {"$ref": "#/$defs/nullable_sha"}, "approved_at": {"oneOf": [{"$ref": "#/$defs/timestamp"}, {"type": "null"}]}, "wrapper_instance_id": {"$ref": "#/$defs/uuid"}, "runner_instance_id": {"$ref": "#/$defs/uuid"}, "packet_created_at": {"$ref": "#/$defs/timestamp"}},
+      "allOf": [
+        {"$ref": "#/$defs/profile_identity"},
+        {"if": {"properties": {"profile_id": {"const": "verifier-v1"}}}, "then": {"properties": {"procedure": {"$ref": "#/$defs/role_packet"}, "verifier_fence_set_sha256": {"$ref": "#/$defs/sha"}}}, "else": {"properties": {"procedure": {"type": "null"}, "verifier_fence_set_sha256": {"type": "null"}}}},
+        {"if": {"properties": {"profile_id": {"const": "l4-director-v1"}}}, "then": {"properties": {"inbox_delivery_ref": {"type": "string"}, "inbox_delivery_sha256": {"$ref": "#/$defs/sha"}}}, "else": {"properties": {"inbox_delivery_ref": {"type": "null"}, "inbox_delivery_sha256": {"type": "null"}}}},
+        {"oneOf": [
+          {"properties": {"producer_adapter_token": {"const": "codex-exec-fixed/1.0.0"}, "producer_launcher_token": {"const": "ht-runtime-role-blocked-exec/1.0.0"}, "producer_launcher_sha256": {"$ref": "#/$defs/sha"}, "producer_home_manifest_sha256": {"$ref": "#/$defs/sha"}, "approval_required": {"const": true}, "approval_request_sha256": {"$ref": "#/$defs/sha"}, "approved_at": {"$ref": "#/$defs/timestamp"}}},
+          {"properties": {"producer_adapter_token": {"const": "sealed-codex-fixture/1.0.0"}, "producer_launcher_token": {"type": "null"}, "producer_launcher_sha256": {"type": "null"}, "producer_home_manifest_sha256": {"type": "null"}, "approval_required": {"const": false}, "approval_request_sha256": {"type": "null"}, "approved_at": {"type": "null"}}}
+        ]}
+      ]
+    },
+    "launch": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "runtime_id", "request_id", "binding_id", "lease_epoch", "session_id", "fence", "profile_id", "wrapper_instance_id", "runner_instance_id", "packet_relative_path", "packet_sha256", "verifier_fence_set_sha256", "entrypoint_token", "runner_entrypoint_token", "producer_launcher_token", "producer_launcher_sha256", "producer_return_schema_source_sha256", "producer_return_schema_copy_sha256", "producer_home_manifest_sha256", "custody_protocol", "barrier_protocol", "runner_liveness_protocol", "producer_exec_barrier_protocol", "sealed_fixture_transport_protocol"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-launch/2.0.0"}, "runtime_id": {"$ref": "#/$defs/uuid"}, "request_id": {"$ref": "#/$defs/uuid"}, "binding_id": {"$ref": "#/$defs/uuid"}, "lease_epoch": {"type": "integer", "minimum": 1}, "session_id": {"$ref": "#/$defs/uuid"}, "fence": {"$ref": "#/$defs/nonempty"}, "profile_id": {"$ref": "#/$defs/profile"}, "wrapper_instance_id": {"$ref": "#/$defs/uuid"}, "runner_instance_id": {"$ref": "#/$defs/uuid"}, "packet_relative_path": {"const": "packet.json"}, "packet_sha256": {"$ref": "#/$defs/sha"}, "verifier_fence_set_sha256": {"$ref": "#/$defs/nullable_sha"}, "entrypoint_token": {"type": "string", "minLength": 1}, "runner_entrypoint_token": {"const": "ht-runtime-profile-runner/1.0.0"}, "producer_launcher_token": {"oneOf": [{"const": "ht-runtime-role-blocked-exec/1.0.0"}, {"type": "null"}]}, "producer_launcher_sha256": {"$ref": "#/$defs/nullable_sha"}, "producer_return_schema_source_sha256": {"$ref": "#/$defs/sha"}, "producer_return_schema_copy_sha256": {"$ref": "#/$defs/sha"}, "producer_home_manifest_sha256": {"$ref": "#/$defs/nullable_sha"}, "custody_protocol": {"const": "inherited-flock-open-description/1.0.0"}, "barrier_protocol": {"const": "private-pipe-role-start-token/1.0.0"}, "runner_liveness_protocol": {"const": "private-pipe-wrapper-liveness-eof/1.0.0"}, "producer_exec_barrier_protocol": {"oneOf": [{"const": "private-pipe-producer-exec-token/1.0.0"}, {"type": "null"}]}, "sealed_fixture_transport_protocol": {"oneOf": [{"const": "private-socketpair-sealed-fixture/1.0.0"}, {"type": "null"}]}},
+      "allOf": [
+        {"if": {"properties": {"profile_id": {"const": "verifier-v1"}}}, "then": {"properties": {"verifier_fence_set_sha256": {"$ref": "#/$defs/sha"}}}, "else": {"properties": {"verifier_fence_set_sha256": {"type": "null"}}}},
+        {"oneOf": [
+          {"properties": {"producer_launcher_token": {"const": "ht-runtime-role-blocked-exec/1.0.0"}, "producer_launcher_sha256": {"$ref": "#/$defs/sha"}, "producer_home_manifest_sha256": {"$ref": "#/$defs/sha"}, "producer_exec_barrier_protocol": {"const": "private-pipe-producer-exec-token/1.0.0"}, "sealed_fixture_transport_protocol": {"type": "null"}}},
+          {"properties": {"producer_launcher_token": {"type": "null"}, "producer_launcher_sha256": {"type": "null"}, "producer_home_manifest_sha256": {"type": "null"}, "producer_exec_barrier_protocol": {"type": "null"}, "sealed_fixture_transport_protocol": {"const": "private-socketpair-sealed-fixture/1.0.0"}}}
+        ]}
+      ]
+    },
+    "started": {
+      "type": "object", "unevaluatedProperties": false,
+      "allOf": [{"$ref": "#/$defs/session_common"}, {"required": ["wrapper_instance_id", "runner_instance_id", "wrapper_pid", "runner_pid", "started_at"], "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-started/1.0.0"}, "wrapper_instance_id": {"$ref": "#/$defs/uuid"}, "runner_instance_id": {"$ref": "#/$defs/uuid"}, "wrapper_pid": {"type": "integer", "minimum": 1}, "runner_pid": {"type": "integer", "minimum": 1}, "started_at": {"$ref": "#/$defs/timestamp"}}}]
+    },
+    "inbox_received": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "delivery_ref", "delivery_sha256", "task_package_ref", "task_package_sha256", "profile_id", "runtime_id", "request_id", "binding_id", "lease_epoch", "session_id", "fence", "packet_sha256", "runner_instance_id", "received_at"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-inbox-received/1.0.0"}, "delivery_ref": {"type": "string", "pattern": "^inbox-delivery#IB-[1-9][0-9]*$"}, "delivery_sha256": {"$ref": "#/$defs/sha"}, "task_package_ref": {"type": "string", "pattern": "^task-package#TP-[1-9][0-9]*$"}, "task_package_sha256": {"$ref": "#/$defs/sha"}, "profile_id": {"$ref": "#/$defs/profile"}, "runtime_id": {"$ref": "#/$defs/uuid"}, "request_id": {"$ref": "#/$defs/uuid"}, "binding_id": {"$ref": "#/$defs/uuid"}, "lease_epoch": {"type": "integer", "minimum": 1}, "session_id": {"$ref": "#/$defs/uuid"}, "fence": {"$ref": "#/$defs/nonempty"}, "packet_sha256": {"$ref": "#/$defs/sha"}, "runner_instance_id": {"$ref": "#/$defs/uuid"}, "received_at": {"$ref": "#/$defs/timestamp"}}
+    },
+    "inbox_ack": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "delivery_ref", "delivery_sha256", "task_package_ref", "task_package_sha256", "profile_id", "runtime_id", "request_id", "binding_id", "lease_epoch", "session_id", "fence", "packet_sha256", "runner_instance_id", "source_receipt_sha256", "event_seq", "event_record_sha256", "daemon_incarnation_id", "acknowledged_at"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-inbox-ack/1.0.0"}, "delivery_ref": {"type": "string", "minLength": 1}, "delivery_sha256": {"$ref": "#/$defs/sha"}, "task_package_ref": {"type": "string", "minLength": 1}, "task_package_sha256": {"$ref": "#/$defs/sha"}, "profile_id": {"$ref": "#/$defs/profile"}, "runtime_id": {"$ref": "#/$defs/uuid"}, "request_id": {"$ref": "#/$defs/uuid"}, "binding_id": {"$ref": "#/$defs/uuid"}, "lease_epoch": {"type": "integer", "minimum": 1}, "session_id": {"$ref": "#/$defs/uuid"}, "fence": {"$ref": "#/$defs/nonempty"}, "packet_sha256": {"$ref": "#/$defs/sha"}, "runner_instance_id": {"$ref": "#/$defs/uuid"}, "source_receipt_sha256": {"$ref": "#/$defs/sha"}, "event_seq": {"type": "integer", "minimum": 1}, "event_record_sha256": {"$ref": "#/$defs/sha"}, "daemon_incarnation_id": {"$ref": "#/$defs/uuid"}, "acknowledged_at": {"$ref": "#/$defs/timestamp"}}
+    },
+    "snapshot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "runtime_id", "request_id", "binding_id", "lease_epoch", "session_id", "fence", "task_package_ref", "task_package_sha256", "snapshot_relative_path", "entries", "files", "directories", "built_at"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-reference-snapshot/1.0.0"}, "runtime_id": {"$ref": "#/$defs/uuid"}, "request_id": {"$ref": "#/$defs/uuid"}, "binding_id": {"$ref": "#/$defs/uuid"}, "lease_epoch": {"type": "integer", "minimum": 1}, "session_id": {"$ref": "#/$defs/uuid"}, "fence": {"$ref": "#/$defs/nonempty"}, "task_package_ref": {"type": "string", "minLength": 1}, "task_package_sha256": {"$ref": "#/$defs/sha"}, "snapshot_relative_path": {"const": "reference-snapshot"}, "entries": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["ref", "repository_relpath", "source_sha256", "source_bytes", "projection_schema_version", "projection_sha256", "projection_bytes"], "properties": {"ref": {"$ref": "#/$defs/nonempty"}, "repository_relpath": {"$ref": "#/$defs/repository_relpath"}, "source_sha256": {"$ref": "#/$defs/sha"}, "source_bytes": {"type": "integer", "minimum": 0}, "projection_schema_version": {"$ref": "#/$defs/nonempty"}, "projection_sha256": {"$ref": "#/$defs/sha"}, "projection_bytes": {"type": "integer", "minimum": 0}}}}, "files": {"type": "integer", "minimum": 0}, "directories": {"type": "integer", "minimum": 1}, "built_at": {"$ref": "#/$defs/timestamp"}}
+    },
+    "snapshot_ack": {
+      "type": "object", "unevaluatedProperties": false,
+      "allOf": [{"$ref": "#/$defs/session_common"}, {"required": ["reference_snapshot_manifest_sha256", "event_seq", "event_record_sha256", "daemon_incarnation_id", "acknowledged_at"], "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-reference-snapshot-ack/1.0.0"}, "reference_snapshot_manifest_sha256": {"$ref": "#/$defs/sha"}, "event_seq": {"type": "integer", "minimum": 1}, "event_record_sha256": {"$ref": "#/$defs/sha"}, "daemon_incarnation_id": {"$ref": "#/$defs/uuid"}, "acknowledged_at": {"$ref": "#/$defs/timestamp"}}}]
+    },
+    "ready": {
+      "type": "object", "unevaluatedProperties": false,
+      "allOf": [{"$ref": "#/$defs/session_common"}, {"required": ["runner_instance_id", "runner_pid", "inbox_ack_sha256", "reference_snapshot_manifest_sha256", "reference_snapshot_ack_sha256", "ready_at"], "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-ready/1.0.0"}, "runner_instance_id": {"$ref": "#/$defs/uuid"}, "runner_pid": {"type": "integer", "minimum": 1}, "inbox_ack_sha256": {"$ref": "#/$defs/nullable_sha"}, "reference_snapshot_manifest_sha256": {"$ref": "#/$defs/sha"}, "reference_snapshot_ack_sha256": {"$ref": "#/$defs/sha"}, "ready_at": {"$ref": "#/$defs/timestamp"}}}]
+    },
+    "producer_started": {
+      "type": "object", "unevaluatedProperties": false,
+      "allOf": [
+        {"$ref": "#/$defs/session_common"},
+        {"required": ["runner_instance_id", "producer_pid", "producer_launcher_token", "producer_launcher_sha256", "producer_binary_sha256", "producer_version", "argv_sha256", "environment_sha256", "producer_return_schema_source_sha256", "producer_return_schema_copy_sha256", "producer_home_manifest_sha256", "reference_snapshot_manifest_sha256", "reference_snapshot_ack_sha256", "started_at"], "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-producer-started/1.0.0"}, "runner_instance_id": {"$ref": "#/$defs/uuid"}, "producer_pid": {"oneOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]}, "producer_launcher_token": {"oneOf": [{"const": "ht-runtime-role-blocked-exec/1.0.0"}, {"type": "null"}]}, "producer_launcher_sha256": {"$ref": "#/$defs/nullable_sha"}, "producer_binary_sha256": {"$ref": "#/$defs/nullable_sha"}, "producer_version": {"$ref": "#/$defs/nonempty"}, "argv_sha256": {"$ref": "#/$defs/nullable_sha"}, "environment_sha256": {"$ref": "#/$defs/nullable_sha"}, "producer_return_schema_source_sha256": {"$ref": "#/$defs/sha"}, "producer_return_schema_copy_sha256": {"$ref": "#/$defs/sha"}, "producer_home_manifest_sha256": {"$ref": "#/$defs/nullable_sha"}, "reference_snapshot_manifest_sha256": {"$ref": "#/$defs/sha"}, "reference_snapshot_ack_sha256": {"$ref": "#/$defs/sha"}, "started_at": {"$ref": "#/$defs/timestamp"}}},
+        {"oneOf": [
+          {"properties": {"producer_pid": {"type": "integer", "minimum": 1}, "producer_launcher_token": {"const": "ht-runtime-role-blocked-exec/1.0.0"}, "producer_launcher_sha256": {"$ref": "#/$defs/sha"}, "producer_binary_sha256": {"$ref": "#/$defs/sha"}, "producer_version": {"const": "codex-cli 0.144.1"}, "argv_sha256": {"$ref": "#/$defs/sha"}, "environment_sha256": {"$ref": "#/$defs/sha"}, "producer_home_manifest_sha256": {"$ref": "#/$defs/sha"}}},
+          {"properties": {"producer_pid": {"type": "null"}, "producer_launcher_token": {"type": "null"}, "producer_launcher_sha256": {"type": "null"}, "producer_binary_sha256": {"type": "null"}, "producer_version": {"const": "ht-sealed-zero-model/1.0.0"}, "argv_sha256": {"type": "null"}, "environment_sha256": {"type": "null"}, "producer_home_manifest_sha256": {"type": "null"}}}
+        ]}
+      ]
+    },
+    "producer_exit": {
+      "type": "object", "unevaluatedProperties": false,
+      "allOf": [
+        {"$ref": "#/$defs/session_common"},
+        {"required": ["runner_instance_id", "producer_pid", "producer_started_sha256", "exit_kind", "exit_code", "signal", "timed_out", "term_sent", "kill_sent", "reaped", "stdout_sha256", "stderr_sha256", "final_response_sha256", "reference_snapshot_manifest_sha256", "reference_snapshot_ack_sha256", "exited_at"], "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-producer-process-exit/1.0.0"}, "runner_instance_id": {"$ref": "#/$defs/uuid"}, "producer_pid": {"oneOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]}, "producer_started_sha256": {"$ref": "#/$defs/sha"}, "exit_kind": {"enum": ["exited", "signaled", "timed-out", "sealed-fixture", "sealed-fixture-failed"]}, "exit_code": {"oneOf": [{"type": "integer", "minimum": 0, "maximum": 255}, {"type": "null"}]}, "signal": {"oneOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]}, "timed_out": {"type": "boolean"}, "term_sent": {"type": "boolean"}, "kill_sent": {"type": "boolean"}, "reaped": {"type": "boolean"}, "stdout_sha256": {"$ref": "#/$defs/nullable_sha"}, "stderr_sha256": {"$ref": "#/$defs/nullable_sha"}, "final_response_sha256": {"$ref": "#/$defs/nullable_sha"}, "reference_snapshot_manifest_sha256": {"$ref": "#/$defs/sha"}, "reference_snapshot_ack_sha256": {"$ref": "#/$defs/sha"}, "exited_at": {"$ref": "#/$defs/timestamp"}}},
+        {"oneOf": [
+          {"properties": {"exit_kind": {"const": "exited"}, "producer_pid": {"type": "integer", "minimum": 1}, "exit_code": {"type": "integer", "minimum": 0, "maximum": 255}, "signal": {"type": "null"}, "timed_out": {"const": false}, "term_sent": {"const": false}, "kill_sent": {"const": false}, "reaped": {"const": true}, "stdout_sha256": {"$ref": "#/$defs/sha"}, "stderr_sha256": {"$ref": "#/$defs/sha"}}},
+          {"properties": {"exit_kind": {"const": "signaled"}, "producer_pid": {"type": "integer", "minimum": 1}, "exit_code": {"type": "null"}, "signal": {"type": "integer", "minimum": 1}, "timed_out": {"const": false}, "term_sent": {"const": false}, "kill_sent": {"const": false}, "reaped": {"const": true}, "stdout_sha256": {"$ref": "#/$defs/sha"}, "stderr_sha256": {"$ref": "#/$defs/sha"}}},
+          {"properties": {"exit_kind": {"const": "timed-out"}, "producer_pid": {"type": "integer", "minimum": 1}, "exit_code": {"type": "null"}, "signal": {"type": "null"}, "timed_out": {"const": true}, "term_sent": {"const": true}, "reaped": {"const": true}, "stdout_sha256": {"$ref": "#/$defs/sha"}, "stderr_sha256": {"$ref": "#/$defs/sha"}}},
+          {"properties": {"exit_kind": {"const": "sealed-fixture"}, "producer_pid": {"type": "null"}, "exit_code": {"type": "null"}, "signal": {"type": "null"}, "timed_out": {"const": false}, "term_sent": {"const": false}, "kill_sent": {"const": false}, "reaped": {"const": false}, "stdout_sha256": {"$ref": "#/$defs/sha"}, "stderr_sha256": {"$ref": "#/$defs/sha"}, "final_response_sha256": {"$ref": "#/$defs/sha"}}},
+          {"properties": {"exit_kind": {"const": "sealed-fixture-failed"}, "producer_pid": {"type": "null"}, "exit_code": {"type": "null"}, "signal": {"type": "null"}, "timed_out": {"const": false}, "term_sent": {"const": false}, "kill_sent": {"const": false}, "reaped": {"const": false}, "stdout_sha256": {"type": "null"}, "stderr_sha256": {"type": "null"}, "final_response_sha256": {"type": "null"}}}
+        ]}
+      ]
+    },
+    "role_result": {
+      "type": "object", "unevaluatedProperties": false,
+      "allOf": [
+        {"$ref": "#/$defs/session_common"},
+        {"required": ["runner_instance_id", "outcome", "action_ids", "action_sha256s", "capture_manifest_sha256", "producer_return_sha256", "producer_process_exit_sha256", "reference_snapshot_manifest_sha256", "reference_snapshot_ack_sha256", "result_at"], "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-result/1.0.0"}, "runner_instance_id": {"$ref": "#/$defs/uuid"}, "outcome": {"enum": ["SUCCEEDED", "FAILED"]}, "action_ids": {"type": "array", "items": {"$ref": "#/$defs/uuid"}, "uniqueItems": true}, "action_sha256s": {"type": "array", "items": {"$ref": "#/$defs/sha"}, "uniqueItems": true}, "capture_manifest_sha256": {"$ref": "#/$defs/sha"}, "producer_return_sha256": {"$ref": "#/$defs/sha"}, "producer_process_exit_sha256": {"$ref": "#/$defs/sha"}, "reference_snapshot_manifest_sha256": {"$ref": "#/$defs/sha"}, "reference_snapshot_ack_sha256": {"$ref": "#/$defs/sha"}, "result_at": {"$ref": "#/$defs/timestamp"}}},
+        {"oneOf": [
+          {"properties": {"outcome": {"const": "SUCCEEDED"}, "action_ids": {"minItems": 1, "maxItems": 1}, "action_sha256s": {"minItems": 1, "maxItems": 1}}},
+          {"properties": {"outcome": {"const": "FAILED"}, "action_ids": {"maxItems": 0}, "action_sha256s": {"maxItems": 0}}}
+        ]}
+      ]
+    },
+    "role_terminal": {
+      "type": "object", "unevaluatedProperties": false,
+      "allOf": [
+        {"$ref": "#/$defs/session_common"},
+        {"required": ["runner_instance_id", "outcome", "action_ids", "action_sha256s", "capture_manifest_sha256", "producer_return_sha256", "producer_process_exit_sha256", "reference_snapshot_manifest_sha256", "reference_snapshot_ack_sha256", "result_sha256", "terminal_at"], "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-terminal/1.0.0"}, "runner_instance_id": {"$ref": "#/$defs/uuid"}, "outcome": {"enum": ["SUCCEEDED", "FAILED"]}, "action_ids": {"type": "array", "items": {"$ref": "#/$defs/uuid"}, "uniqueItems": true}, "action_sha256s": {"type": "array", "items": {"$ref": "#/$defs/sha"}, "uniqueItems": true}, "capture_manifest_sha256": {"$ref": "#/$defs/sha"}, "producer_return_sha256": {"$ref": "#/$defs/sha"}, "producer_process_exit_sha256": {"$ref": "#/$defs/sha"}, "reference_snapshot_manifest_sha256": {"$ref": "#/$defs/sha"}, "reference_snapshot_ack_sha256": {"$ref": "#/$defs/sha"}, "result_sha256": {"$ref": "#/$defs/sha"}, "terminal_at": {"$ref": "#/$defs/timestamp"}}},
+        {"oneOf": [
+          {"properties": {"outcome": {"const": "SUCCEEDED"}, "action_ids": {"minItems": 1, "maxItems": 1}, "action_sha256s": {"minItems": 1, "maxItems": 1}}},
+          {"properties": {"outcome": {"const": "FAILED"}, "action_ids": {"maxItems": 0}, "action_sha256s": {"maxItems": 0}}}
+        ]}
+      ]
+    },
+    "process_exit": {
+      "type": "object", "unevaluatedProperties": false,
+      "allOf": [
+        {"$ref": "#/$defs/session_common"},
+        {"required": ["wrapper_instance_id", "runner_instance_id", "wrapper_pid", "runner_pid", "runner_wait_status", "runner_reaped", "exit_kind", "exit_code", "signal", "started_sha256", "ready_sha256", "reference_snapshot_manifest_sha256", "reference_snapshot_ack_sha256", "result_sha256", "terminal_sha256", "exited_at"], "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-process-exit/1.0.0"}, "wrapper_instance_id": {"$ref": "#/$defs/uuid"}, "runner_instance_id": {"$ref": "#/$defs/uuid"}, "wrapper_pid": {"type": "integer", "minimum": 1}, "runner_pid": {"type": "integer", "minimum": 1}, "runner_wait_status": {"type": "integer", "minimum": -2147483648, "maximum": 255}, "runner_reaped": {"const": true}, "exit_kind": {"enum": ["exited", "signaled"]}, "exit_code": {"oneOf": [{"type": "integer", "minimum": 0, "maximum": 255}, {"type": "null"}]}, "signal": {"oneOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]}, "started_sha256": {"$ref": "#/$defs/sha"}, "ready_sha256": {"$ref": "#/$defs/nullable_sha"}, "reference_snapshot_manifest_sha256": {"$ref": "#/$defs/nullable_sha"}, "reference_snapshot_ack_sha256": {"$ref": "#/$defs/nullable_sha"}, "result_sha256": {"$ref": "#/$defs/nullable_sha"}, "terminal_sha256": {"$ref": "#/$defs/nullable_sha"}, "exited_at": {"$ref": "#/$defs/timestamp"}}},
+        {"oneOf": [
+          {"properties": {"exit_kind": {"const": "exited"}, "runner_wait_status": {"type": "integer", "minimum": 0, "maximum": 255}, "exit_code": {"type": "integer", "minimum": 0, "maximum": 255}, "signal": {"type": "null"}}},
+          {"properties": {"exit_kind": {"const": "signaled"}, "runner_wait_status": {"type": "integer", "minimum": -2147483648, "maximum": -1}, "exit_code": {"type": "null"}, "signal": {"type": "integer", "minimum": 1}}}
+        ]},
+        {"if": {"properties": {"terminal_sha256": {"$ref": "#/$defs/sha"}}}, "then": {"properties": {"runner_wait_status": {"const": 0}, "exit_kind": {"const": "exited"}, "exit_code": {"const": 0}, "ready_sha256": {"$ref": "#/$defs/sha"}, "reference_snapshot_manifest_sha256": {"$ref": "#/$defs/sha"}, "reference_snapshot_ack_sha256": {"$ref": "#/$defs/sha"}, "result_sha256": {"$ref": "#/$defs/sha"}}}},
+        {"if": {"properties": {"result_sha256": {"$ref": "#/$defs/sha"}}}, "then": {"properties": {"ready_sha256": {"$ref": "#/$defs/sha"}, "reference_snapshot_manifest_sha256": {"$ref": "#/$defs/sha"}, "reference_snapshot_ack_sha256": {"$ref": "#/$defs/sha"}}}}
+      ]
+    },
+    "capture": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "runtime_id", "session_uuid", "level", "profile_id", "fence", "transcript_format", "producer_adapter_token", "producer_binary_sha256", "producer_version", "producer_native_id", "main_relative_path", "stderr_relative_path", "final_relative_path", "inventory", "producer_process_exit_sha256", "final_response_sha256", "reference_snapshot_manifest_sha256", "reference_snapshot_ack_sha256", "capture_status", "created_at"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-capture-manifest/1.0.0"}, "runtime_id": {"$ref": "#/$defs/uuid"}, "session_uuid": {"$ref": "#/$defs/uuid"}, "level": {"enum": ["top", "L4"]}, "profile_id": {"$ref": "#/$defs/profile"}, "fence": {"$ref": "#/$defs/nonempty"}, "transcript_format": {"const": "codex-exec-jsonl/0.144.1"}, "producer_adapter_token": {"enum": ["codex-exec-fixed/1.0.0", "sealed-codex-fixture/1.0.0"]}, "producer_binary_sha256": {"$ref": "#/$defs/nullable_sha"}, "producer_version": {"$ref": "#/$defs/nonempty"}, "producer_native_id": {"oneOf": [{"$ref": "#/$defs/uuid"}, {"type": "string", "pattern": "^sealed-fixture:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"}, {"type": "null"}]}, "main_relative_path": {"const": "transcript/codex-exec.jsonl"}, "stderr_relative_path": {"const": "transcript/codex-stderr.bin"}, "final_relative_path": {"oneOf": [{"const": "transcript/producer-final.txt"}, {"type": "null"}]}, "inventory": {"type": "array", "prefixItems": [{"$ref": "#/$defs/inventory_main"}, {"$ref": "#/$defs/inventory_stderr"}, {"$ref": "#/$defs/inventory_final"}], "items": false, "minItems": 2, "maxItems": 3}, "producer_process_exit_sha256": {"$ref": "#/$defs/sha"}, "final_response_sha256": {"$ref": "#/$defs/nullable_sha"}, "reference_snapshot_manifest_sha256": {"$ref": "#/$defs/sha"}, "reference_snapshot_ack_sha256": {"$ref": "#/$defs/sha"}, "capture_status": {"enum": ["complete", "failed-preserved"]}, "created_at": {"$ref": "#/$defs/timestamp"}},
+      "allOf": [
+        {"if": {"properties": {"profile_id": {"const": "principal-coordinator-v1"}}}, "then": {"properties": {"level": {"const": "top"}}}, "else": {"properties": {"level": {"const": "L4"}}}},
+        {"oneOf": [
+          {"properties": {"producer_adapter_token": {"const": "codex-exec-fixed/1.0.0"}, "producer_binary_sha256": {"$ref": "#/$defs/sha"}, "producer_version": {"const": "codex-cli 0.144.1"}, "producer_native_id": {"oneOf": [{"$ref": "#/$defs/uuid"}, {"type": "null"}]}}},
+          {"properties": {"producer_adapter_token": {"const": "sealed-codex-fixture/1.0.0"}, "producer_binary_sha256": {"type": "null"}, "producer_version": {"const": "ht-sealed-zero-model/1.0.0"}, "producer_native_id": {"type": "string", "pattern": "^sealed-fixture:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"}, "final_relative_path": {"const": "transcript/producer-final.txt"}, "final_response_sha256": {"$ref": "#/$defs/sha"}, "inventory": {"minItems": 3}, "capture_status": {"const": "complete"}}}
+        ]},
+        {"oneOf": [
+          {"properties": {"final_relative_path": {"type": "null"}, "final_response_sha256": {"type": "null"}, "inventory": {"maxItems": 2}, "capture_status": {"const": "failed-preserved"}}},
+          {"properties": {"final_relative_path": {"const": "transcript/producer-final.txt"}, "final_response_sha256": {"$ref": "#/$defs/sha"}, "inventory": {"minItems": 3}}}
+        ]}
+      ]
+    },
+    "inventory_row": {"type": "object", "additionalProperties": false, "required": ["relative_path", "sha256", "bytes"], "properties": {"relative_path": {"$ref": "#/$defs/repository_relpath"}, "sha256": {"$ref": "#/$defs/sha"}, "bytes": {"type": "integer", "minimum": 0}}},
+    "inventory_main": {"allOf": [{"$ref": "#/$defs/inventory_row"}, {"properties": {"relative_path": {"const": "transcript/codex-exec.jsonl"}}}]},
+    "inventory_stderr": {"allOf": [{"$ref": "#/$defs/inventory_row"}, {"properties": {"relative_path": {"const": "transcript/codex-stderr.bin"}}}]},
+    "inventory_final": {"allOf": [{"$ref": "#/$defs/inventory_row"}, {"properties": {"relative_path": {"const": "transcript/producer-final.txt"}}}]},
+    "producer_home": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "runtime_id", "request_id", "session_id", "producer_adapter_token", "producer_binary_sha256", "producer_version", "auth_sha256", "envelope_prefix_sha256", "envelope_vector_sha256", "home_entries", "sqlite_entries", "tmp_entries", "built_at"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-producer-home-manifest/1.0.0"}, "runtime_id": {"$ref": "#/$defs/uuid"}, "request_id": {"$ref": "#/$defs/uuid"}, "session_id": {"$ref": "#/$defs/uuid"}, "producer_adapter_token": {"const": "codex-exec-fixed/1.0.0"}, "producer_binary_sha256": {"$ref": "#/$defs/sha"}, "producer_version": {"const": "codex-cli 0.144.1"}, "auth_sha256": {"$ref": "#/$defs/sha"}, "envelope_prefix_sha256": {"$ref": "#/$defs/sha"}, "envelope_vector_sha256": {"$ref": "#/$defs/sha"}, "home_entries": {"$ref": "#/$defs/home_entries"}, "sqlite_entries": {"$ref": "#/$defs/home_entries"}, "tmp_entries": {"$ref": "#/$defs/home_entries"}, "built_at": {"$ref": "#/$defs/timestamp"}}
+    },
+    "home_entries": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["relative_path", "kind", "mode", "nlink", "sha256", "bytes"], "properties": {"relative_path": {"$ref": "#/$defs/repository_relpath"}, "kind": {"enum": ["regular", "directory"]}, "mode": {"enum": ["0600", "0644", "0700"]}, "nlink": {"type": "integer", "minimum": 1}, "sha256": {"$ref": "#/$defs/nullable_sha"}, "bytes": {"oneOf": [{"type": "integer", "minimum": 0}, {"type": "null"}]}}}},
+    "action_payload": {
+      "oneOf": [
+        {"type": "object", "additionalProperties": false, "required": ["issue_ref", "lane", "question", "done_definition"], "properties": {"issue_ref": {"type": "string", "pattern": "^issue#I-[1-9][0-9]*$"}, "lane": {"const": "L4"}, "question": {"$ref": "#/$defs/nonempty"}, "done_definition": {"$ref": "#/$defs/nonempty"}}},
+        {"type": "object", "additionalProperties": false, "required": ["source_issue_queue_schema_version", "source_issue_queue_sha256", "source_issue_queue_canonical_json", "entries"], "properties": {"source_issue_queue_schema_version": {"$ref": "#/$defs/nonempty"}, "source_issue_queue_sha256": {"$ref": "#/$defs/sha"}, "source_issue_queue_canonical_json": {"type": "string", "pattern": "\\n$"}, "entries": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["issue_ref", "rank", "triage_note", "date"], "properties": {"issue_ref": {"type": "string", "minLength": 1}, "rank": {"type": "integer", "minimum": 1}, "triage_note": {"oneOf": [{"$ref": "#/$defs/nonempty"}, {"type": "null"}]}, "date": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}}}}}},
+        {"type": "object", "additionalProperties": false, "required": ["item_ref", "note", "date"], "properties": {"item_ref": {"type": "string", "minLength": 1}, "note": {"$ref": "#/$defs/nonempty"}, "date": {"type": "string", "minLength": 1}}},
+        {"type": "object", "additionalProperties": false, "required": ["reason_code"], "properties": {"reason_code": {"enum": ["no-routing-change", "awaiting-user", "awaiting-lane-return"]}}},
+        {"type": "object", "additionalProperties": false, "required": ["subgoal_ref", "node_ref", "question", "done_definition", "director_note"], "properties": {"subgoal_ref": {"type": "string", "minLength": 1}, "node_ref": {"type": "string", "minLength": 1}, "question": {"$ref": "#/$defs/nonempty"}, "done_definition": {"$ref": "#/$defs/nonempty"}, "director_note": {"oneOf": [{"$ref": "#/$defs/nonempty"}, {"type": "null"}]}}},
+        {"type": "object", "additionalProperties": false, "required": ["issue_ref", "subgoal_ref", "rationale", "date"], "properties": {"issue_ref": {"type": "string", "minLength": 1}, "subgoal_ref": {"type": "string", "minLength": 1}, "rationale": {"$ref": "#/$defs/nonempty"}, "date": {"type": "string", "minLength": 1}}},
+        {"type": "object", "additionalProperties": false, "required": ["dispatch_ref", "rationale", "date"], "properties": {"dispatch_ref": {"type": "string", "minLength": 1}, "rationale": {"$ref": "#/$defs/nonempty"}, "date": {"type": "string", "minLength": 1}}},
+        {"type": "object", "additionalProperties": false, "required": ["dispatch_ref", "plan_output", "junior_tasks", "checker_task"], "properties": {"dispatch_ref": {"type": "string", "minLength": 1}, "plan_output": {"$ref": "#/$defs/action_output"}, "junior_tasks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/action_task"}}, "checker_task": {"$ref": "#/$defs/action_task"}}},
+        {"type": "object", "additionalProperties": false, "required": ["dispatch_ref", "report_output", "proposed_claims"], "properties": {"dispatch_ref": {"type": "string", "minLength": 1}, "report_output": {"$ref": "#/$defs/action_output"}, "proposed_claims": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["proposal_id", "claim_text", "proposed_tier", "standing_class", "anchors", "instrument", "epoch"], "properties": {"proposal_id": {"type": "string", "minLength": 1}, "claim_text": {"$ref": "#/$defs/nonempty"}, "proposed_tier": {"type": "integer", "minimum": 1, "maximum": 3}, "standing_class": {"enum": ["trunk", "sandbox", "slice"]}, "anchors": {"type": "array", "minItems": 1}, "instrument": {"oneOf": [{"$ref": "#/$defs/nonempty"}, {"type": "null"}]}, "epoch": {"type": "integer", "minimum": 0}}}}}},
+        {"type": "object", "additionalProperties": false, "required": ["dispatch_ref", "artifact_outputs", "completion_status"], "properties": {"dispatch_ref": {"type": "string", "minLength": 1}, "artifact_outputs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/action_output"}}, "completion_status": {"enum": ["done", "failed", "skipped"]}}},
+        {"type": "object", "additionalProperties": false, "required": ["dispatch_ref", "qa_output", "verdict"], "properties": {"dispatch_ref": {"type": "string", "minLength": 1}, "qa_output": {"$ref": "#/$defs/action_output"}, "verdict": {"enum": ["pass", "hold"]}}},
+        {"type": "object", "additionalProperties": false, "required": ["dispatch_ref", "report_ref", "report_sha256", "report_action_ref", "report_attempt", "whole_report_verdict", "plan_conformance", "coverage", "claim_verdicts", "defects", "standing", "standing_note"], "properties": {"dispatch_ref": {"type": "string", "minLength": 1}, "report_ref": {"type": "string", "minLength": 1}, "report_sha256": {"$ref": "#/$defs/sha"}, "report_action_ref": {"type": "string", "minLength": 1}, "report_attempt": {"const": 1}, "whole_report_verdict": {"enum": ["accepted", "bounced"]}, "plan_conformance": {"enum": ["conformant", "defective"]}, "coverage": {"enum": ["complete", "honestly-bounded", "defective"]}, "claim_verdicts": {"type": "array"}, "defects": {"type": "array"}, "standing": {"enum": ["untested", "supported", "weakened", "refuted", "contested"]}, "standing_note": {"oneOf": [{"$ref": "#/$defs/nonempty"}, {"type": "null"}]}}}
+      ]
+    },
+    "action_output": {"type": "object", "additionalProperties": false, "required": ["slot", "relative_path", "sha256", "bytes"], "properties": {"slot": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"}, "relative_path": {"$ref": "#/$defs/repository_relpath"}, "sha256": {"$ref": "#/$defs/sha"}, "bytes": {"type": "integer", "minimum": 0}}},
+    "action_task": {"type": "object", "additionalProperties": false, "required": ["title", "objective", "done_definition", "constraints", "required_output_slots"], "properties": {"title": {"$ref": "#/$defs/nonempty"}, "objective": {"$ref": "#/$defs/nonempty"}, "done_definition": {"$ref": "#/$defs/nonempty"}, "constraints": {"type": "array", "items": {"$ref": "#/$defs/nonempty"}}, "required_output_slots": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"}, "uniqueItems": true}}},
+    "action": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "action_id", "action_kind", "target_ref", "payload", "profile_id", "role_packet", "task_package_ref", "task_package_sha256", "verifier_fence_set_sha256", "outputs", "created_at"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-action/1.0.0"}, "action_id": {"$ref": "#/$defs/uuid"}, "action_kind": {"enum": ["pc.route-subgoal", "pc.rerank-issue-queue", "pc.annotate-ratification", "pc.no-op", "director.create-dispatch", "director.raise-interrupt", "director.recall-dispatch", "senior.submit-plan", "senior.submit-report", "junior.return-unit-artifact", "checker.return-qa", "verifier.adjudicate-report"]}, "target_ref": {"$ref": "#/$defs/nonempty"}, "payload": {"$ref": "#/$defs/action_payload"}, "profile_id": {"$ref": "#/$defs/profile"}, "role_packet": {"type": "object", "additionalProperties": false, "required": ["version", "sha256"], "properties": {"version": {"const": "v1"}, "sha256": {"$ref": "#/$defs/sha"}}}, "task_package_ref": {"type": "string", "pattern": "^task-package#TP-[1-9][0-9]*$"}, "task_package_sha256": {"$ref": "#/$defs/sha"}, "verifier_fence_set_sha256": {"$ref": "#/$defs/nullable_sha"}, "outputs": {"type": "array", "items": {"$ref": "#/$defs/action_output"}, "uniqueItems": true}, "created_at": {"$ref": "#/$defs/timestamp"}},
+      "oneOf": [
+        {"properties": {"action_kind": {"const": "pc.route-subgoal"}, "target_ref": {"type": "string", "pattern": "^issue#I-[1-9][0-9]*$"}, "profile_id": {"const": "principal-coordinator-v1"}, "verifier_fence_set_sha256": {"type": "null"}, "payload": {"$ref": "#/$defs/action_payload/oneOf/0"}}},
+        {"properties": {"action_kind": {"const": "pc.rerank-issue-queue"}, "target_ref": {"const": "issue-queue#current"}, "profile_id": {"const": "principal-coordinator-v1"}, "verifier_fence_set_sha256": {"type": "null"}, "payload": {"$ref": "#/$defs/action_payload/oneOf/1"}}},
+        {"properties": {"action_kind": {"const": "pc.annotate-ratification"}, "target_ref": {"type": "string", "pattern": "^ratification-item#RQ-[1-9][0-9]*$"}, "profile_id": {"const": "principal-coordinator-v1"}, "verifier_fence_set_sha256": {"type": "null"}, "payload": {"$ref": "#/$defs/action_payload/oneOf/2"}}},
+        {"properties": {"action_kind": {"const": "pc.no-op"}, "target_ref": {"const": "pc#principal-coordinator"}, "profile_id": {"const": "principal-coordinator-v1"}, "verifier_fence_set_sha256": {"type": "null"}, "payload": {"$ref": "#/$defs/action_payload/oneOf/3"}}},
+        {"properties": {"action_kind": {"const": "director.create-dispatch"}, "target_ref": {"type": "string", "pattern": "^tree#L4/node#[1-9][0-9]*(?:\\.[1-9][0-9]*)*$"}, "profile_id": {"const": "l4-director-v1"}, "verifier_fence_set_sha256": {"type": "null"}, "payload": {"$ref": "#/$defs/action_payload/oneOf/4"}}},
+        {"properties": {"action_kind": {"const": "director.raise-interrupt"}, "target_ref": {"type": "string", "pattern": "^subgoal#SG-[1-9][0-9]*$"}, "profile_id": {"const": "l4-director-v1"}, "verifier_fence_set_sha256": {"type": "null"}, "payload": {"$ref": "#/$defs/action_payload/oneOf/5"}}},
+        {"properties": {"action_kind": {"const": "director.recall-dispatch"}, "target_ref": {"$ref": "#/$defs/dispatch_ref"}, "profile_id": {"const": "l4-director-v1"}, "verifier_fence_set_sha256": {"type": "null"}, "payload": {"$ref": "#/$defs/action_payload/oneOf/6"}}},
+        {"properties": {"action_kind": {"const": "senior.submit-plan"}, "target_ref": {"$ref": "#/$defs/dispatch_ref"}, "profile_id": {"const": "senior-v1"}, "verifier_fence_set_sha256": {"type": "null"}, "payload": {"$ref": "#/$defs/action_payload/oneOf/7"}}},
+        {"properties": {"action_kind": {"const": "senior.submit-report"}, "target_ref": {"$ref": "#/$defs/dispatch_ref"}, "profile_id": {"const": "senior-v1"}, "verifier_fence_set_sha256": {"type": "null"}, "payload": {"$ref": "#/$defs/action_payload/oneOf/8"}}},
+        {"properties": {"action_kind": {"const": "junior.return-unit-artifact"}, "target_ref": {"$ref": "#/$defs/dispatch_ref"}, "profile_id": {"const": "junior-v1"}, "verifier_fence_set_sha256": {"type": "null"}, "payload": {"$ref": "#/$defs/action_payload/oneOf/9"}}},
+        {"properties": {"action_kind": {"const": "checker.return-qa"}, "target_ref": {"$ref": "#/$defs/dispatch_ref"}, "profile_id": {"const": "checker-v1"}, "verifier_fence_set_sha256": {"type": "null"}, "payload": {"$ref": "#/$defs/action_payload/oneOf/10"}}},
+        {"properties": {"action_kind": {"const": "verifier.adjudicate-report"}, "target_ref": {"$ref": "#/$defs/dispatch_ref"}, "profile_id": {"const": "verifier-v1"}, "verifier_fence_set_sha256": {"$ref": "#/$defs/sha"}, "payload": {"$ref": "#/$defs/action_payload/oneOf/11"}}}
+      ]
+    },
+    "approval_request": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "request_id", "binding_id", "request_sha256", "intent", "requested_by_role", "created_at"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-approval-request/1.0.0"}, "request_id": {"$ref": "#/$defs/uuid"}, "binding_id": {"$ref": "#/$defs/uuid"}, "request_sha256": {"$ref": "#/$defs/sha"}, "intent": {"const": "approve-role-request"}, "requested_by_role": {"const": "user"}, "created_at": {"$ref": "#/$defs/timestamp"}}
+    },
+    "approval_response": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "status", "request_id", "binding_id", "request_sha256", "approval_request_sha256", "approved_at", "event_seq", "event_record_sha256"],
+      "properties": {"schema_version": {"const": "hypothesis-tree-runtime-role-approval-response/1.0.0"}, "status": {"const": "approved"}, "request_id": {"$ref": "#/$defs/uuid"}, "binding_id": {"$ref": "#/$defs/uuid"}, "request_sha256": {"$ref": "#/$defs/sha"}, "approval_request_sha256": {"$ref": "#/$defs/sha"}, "approved_at": {"$ref": "#/$defs/timestamp"}, "event_seq": {"type": "integer", "minimum": 1}, "event_record_sha256": {"$ref": "#/$defs/sha"}}
+    }
+  },
+  "oneOf": [
+    {"$ref": "#/$defs/role_capability"},
+    {"$ref": "#/$defs/role_initialization"},
+    {"$ref": "#/$defs/role_init_result"},
+    {"$ref": "#/$defs/checkpoint"},
+    {"$ref": "#/$defs/verifier_fence_set"},
+    {"$ref": "#/$defs/role_request"},
+    {"$ref": "#/$defs/admission"},
+    {"$ref": "#/$defs/session_packet"},
+    {"$ref": "#/$defs/launch"},
+    {"$ref": "#/$defs/started"},
+    {"$ref": "#/$defs/inbox_received"},
+    {"$ref": "#/$defs/inbox_ack"},
+    {"$ref": "#/$defs/snapshot"},
+    {"$ref": "#/$defs/snapshot_ack"},
+    {"$ref": "#/$defs/ready"},
+    {"$ref": "#/$defs/producer_started"},
+    {"$ref": "#/$defs/producer_exit"},
+    {"$ref": "#/$defs/role_result"},
+    {"$ref": "#/$defs/role_terminal"},
+    {"$ref": "#/$defs/process_exit"},
+    {"$ref": "#/$defs/capture"},
+    {"$ref": "#/$defs/producer_home"},
+    {"$ref": "#/$defs/action"},
+    {"$ref": "#/$defs/approval_request"},
+    {"$ref": "#/$defs/approval_response"}
+  ]
+}

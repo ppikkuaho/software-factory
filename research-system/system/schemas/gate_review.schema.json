@@ -1,0 +1,406 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree/schemas/gate_review.schema.json",
+  "$comment": "Committed composition-gate review. Created complete by cgate and immutable after birth.",
+  "title": "gate_review",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "merge_record_ref",
+    "created",
+    "stage",
+    "attempt_id",
+    "screen_ref",
+    "packet",
+    "template",
+    "generator",
+    "rules_fired",
+    "verdict",
+    "note",
+    "observations",
+    "raw_output",
+    "escalation_ref"
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "oid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+    },
+    "stage2Verdict": {
+      "oneOf": [
+        {
+          "enum": [
+            "consolidate-first",
+            "bounce-for-surface-rework",
+            "hold",
+            "escalate-to-user",
+            "escalate-stuck"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^land-after-.+$"
+        }
+      ]
+    },
+    "allVerdict": {
+      "oneOf": [
+        { "const": "land" },
+        { "$ref": "#/$defs/stage2Verdict" }
+      ]
+    },
+    "screenRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "output_ref",
+        "log_ref",
+        "log_sha256",
+        "output_sha256",
+        "computed",
+        "head_commit",
+        "head_tree",
+        "config_hash",
+        "engine_version"
+      ],
+      "properties": {
+        "output_ref": { "type": ["string", "null"], "pattern": "^var/.+" },
+        "log_ref": { "type": ["string", "null"], "pattern": "^var/.+" },
+        "log_sha256": {
+          "oneOf": [
+            { "$ref": "#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "output_sha256": {
+          "oneOf": [
+            { "$ref": "#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "computed": { "type": ["string", "null"], "minLength": 1 },
+        "head_commit": { "type": ["string", "null"] },
+        "head_tree": { "type": ["string", "null"] },
+        "config_hash": {
+          "oneOf": [
+            { "$ref": "#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "engine_version": {
+          "enum": ["composition-gate/1.1.0", null]
+        }
+      },
+      "oneOf": [
+        {
+          "$comment": "Exact all-null birth identity copied for an invalid-screen escalation.",
+          "properties": {
+            "output_ref": { "type": "null" },
+            "log_ref": { "type": "null" },
+            "log_sha256": { "type": "null" },
+            "output_sha256": { "type": "null" },
+            "computed": { "type": "null" },
+            "head_commit": { "type": "null" },
+            "head_tree": { "type": "null" },
+            "config_hash": { "type": "null" },
+            "engine_version": { "type": "null" }
+          }
+        },
+        {
+          "$comment": "Normal rehashable W2 snapshot.",
+          "properties": {
+            "output_ref": { "type": "string", "pattern": "^var/.+" },
+            "log_ref": { "type": "string", "pattern": "^var/.+" },
+            "log_sha256": { "$ref": "#/$defs/sha256" },
+            "output_sha256": { "$ref": "#/$defs/sha256" },
+            "computed": { "type": "string", "minLength": 1 },
+            "head_commit": { "$ref": "#/$defs/oid" },
+            "head_tree": { "$ref": "#/$defs/oid" },
+            "config_hash": { "$ref": "#/$defs/sha256" },
+            "engine_version": { "const": "composition-gate/1.1.0" }
+          }
+        },
+        {
+          "$comment": "Committed W2 technical-error identity; never verdictable as ordinary evidence.",
+          "properties": {
+            "output_ref": { "type": "string", "pattern": "^var/.+" },
+            "log_ref": { "type": "string", "pattern": "^var/.+" },
+            "log_sha256": { "$ref": "#/$defs/sha256" },
+            "output_sha256": { "$ref": "#/$defs/sha256" },
+            "computed": { "type": "string", "minLength": 1 },
+            "head_commit": { "type": "null" },
+            "head_tree": { "type": "null" },
+            "config_hash": { "$ref": "#/$defs/sha256" },
+            "engine_version": { "const": "composition-gate/1.1.0" }
+          }
+        }
+      ]
+    },
+    "packet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest_ref",
+        "manifest_sha256",
+        "artifact_refs",
+        "input_hashes"
+      ],
+      "properties": {
+        "manifest_ref": {
+          "type": "string",
+          "pattern": "^var/cgate/MR-[0-9]+/attempts/[0-9a-f]{32}/packet/manifest\\.json$"
+        },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "artifact_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "input_hashes": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    },
+    "template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "sha256"],
+      "properties": {
+        "name": { "const": "composition-gate-review.v1.md" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "message"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mechanism",
+        "status",
+        "requested_model",
+        "actual_model",
+        "session_ref",
+        "error"
+      ],
+      "properties": {
+        "mechanism": { "enum": ["claude-p", "injected-synthetic"] },
+        "status": { "enum": ["success", "technical-failure", "synthetic"] },
+        "requested_model": { "type": ["string", "null"] },
+        "actual_model": { "type": ["string", "null"] },
+        "session_ref": { "type": ["string", "null"] },
+        "error": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/error" }
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "$comment": "Successful real claude -p observation.",
+          "properties": {
+            "mechanism": { "const": "claude-p" },
+            "status": { "const": "success" },
+            "requested_model": { "const": "opus" },
+            "actual_model": { "type": "string", "minLength": 1 },
+            "session_ref": { "type": "string", "minLength": 1 },
+            "error": { "type": "null" }
+          }
+        },
+        {
+          "$comment": "Failed real mechanism with truthful technical evidence.",
+          "properties": {
+            "mechanism": { "const": "claude-p" },
+            "status": { "const": "technical-failure" },
+            "requested_model": { "enum": ["opus", null] },
+            "actual_model": {
+              "oneOf": [
+                { "type": "null" },
+                { "type": "string", "minLength": 1 }
+              ]
+            },
+            "session_ref": {
+              "oneOf": [
+                { "type": "null" },
+                { "type": "string", "minLength": 1 }
+              ]
+            },
+            "error": { "$ref": "#/$defs/error" }
+          }
+        },
+        {
+          "$comment": "Injected test-only generator provenance.",
+          "properties": {
+            "mechanism": { "const": "injected-synthetic" },
+            "status": { "const": "synthetic" },
+            "requested_model": { "type": "null" },
+            "actual_model": { "const": "<synthetic>" },
+            "session_ref": { "type": "string", "minLength": 1 },
+            "error": { "type": "null" }
+          }
+        }
+      ]
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule_id", "outcome"],
+      "properties": {
+        "rule_id": { "type": "string", "minLength": 1 },
+        "outcome": { "$ref": "#/$defs/allVerdict" }
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "sha256"],
+      "properties": {
+        "ref": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "anchors"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "anchors": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/anchor" }
+        }
+      }
+    },
+    "rawOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "sha256"],
+      "properties": {
+        "ref": {
+          "type": "string",
+          "pattern": "^var/cgate/MR-[0-9]+/attempts/[0-9a-f]{32}/raw-output\\.json$"
+        },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  },
+  "properties": {
+    "id": { "type": "string", "pattern": "^GR-[0-9]+$" },
+    "merge_record_ref": { "type": "string", "pattern": "^MR-[0-9]+$" },
+    "created": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "stage": { "enum": [1, 2] },
+    "attempt_id": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^[0-9a-f]{32}$" }
+      ]
+    },
+    "screen_ref": { "$ref": "#/$defs/screenRef" },
+    "packet": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/packet" }
+      ]
+    },
+    "template": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/template" }
+      ]
+    },
+    "generator": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/generator" }
+      ]
+    },
+    "rules_fired": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/rule" }
+    },
+    "verdict": { "$ref": "#/$defs/allVerdict" },
+    "note": { "type": "string", "minLength": 1 },
+    "observations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/observation" }
+    },
+    "raw_output": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/rawOutput" }
+      ]
+    },
+    "escalation_ref": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^RQ-[0-9]+$" }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "oneOf": [
+        {
+          "$comment": "Stage 1 is either exact allgreen land or invalid-screen stuck; no attempt/model artifacts exist.",
+          "properties": {
+            "stage": { "const": 1 },
+            "attempt_id": { "type": "null" },
+            "packet": { "type": "null" },
+            "template": { "type": "null" },
+            "generator": { "type": "null" },
+            "verdict": { "enum": ["land", "escalate-stuck"] },
+            "observations": { "maxItems": 0 },
+            "raw_output": { "type": "null" }
+          }
+        },
+        {
+          "$comment": "Every semantic failure is reviewed at stage 2 and exact land is unavailable.",
+          "properties": {
+            "stage": { "const": 2 },
+            "attempt_id": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+            "packet": { "$ref": "#/$defs/packet" },
+            "template": { "$ref": "#/$defs/template" },
+            "generator": { "$ref": "#/$defs/generator" },
+            "verdict": { "$ref": "#/$defs/stage2Verdict" },
+            "raw_output": { "$ref": "#/$defs/rawOutput" }
+          }
+        }
+      ]
+    },
+    {
+      "if": {
+        "properties": {
+          "verdict": { "enum": ["escalate-to-user", "escalate-stuck"] }
+        }
+      },
+      "then": {
+        "properties": {
+          "escalation_ref": { "type": "string", "pattern": "^RQ-[0-9]+$" }
+        }
+      },
+      "else": {
+        "properties": {
+          "escalation_ref": { "type": "null" }
+        }
+      }
+    }
+  ]
+}

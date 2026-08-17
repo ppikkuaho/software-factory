@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hypothesis-tree.local/runtime/process-exit-receipt.schema.json",
+  "$defs": {"uuid": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"}, "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "runtime_id", "request_id", "binding_id", "lease_epoch", "session_id", "packet_sha256", "wrapper_instance_id", "helper_instance_id", "wrapper_pid", "helper_pid", "wait_status", "result_sha256", "terminal_sha256", "process_exited_at"],
+  "properties": {"schema_version": {"const": "hypothesis-tree-runtime-process-exit/1.0.0"}, "runtime_id": {"$ref": "#/$defs/uuid"}, "request_id": {"$ref": "#/$defs/uuid"}, "binding_id": {"$ref": "#/$defs/uuid"}, "lease_epoch": {"type": "integer", "minimum": 1}, "session_id": {"$ref": "#/$defs/uuid"}, "packet_sha256": {"$ref": "#/$defs/sha"}, "wrapper_instance_id": {"$ref": "#/$defs/uuid"}, "helper_instance_id": {"$ref": "#/$defs/uuid"}, "wrapper_pid": {"type": "integer", "minimum": 1}, "helper_pid": {"type": "integer", "minimum": 1}, "wait_status": {"type": "integer"}, "result_sha256": {"oneOf": [{"$ref": "#/$defs/sha"}, {"type": "null"}]}, "terminal_sha256": {"oneOf": [{"$ref": "#/$defs/sha"}, {"type": "null"}]}, "process_exited_at": {"type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"}}
+}

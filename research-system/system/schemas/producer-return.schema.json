@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hypothesis-tree.local/producer-return.schema.json",
+  "$defs": {
+    "nonempty": {"type": "string", "minLength": 1},
+    "nullable_nonempty": {"oneOf": [{"$ref": "#/$defs/nonempty"}, {"type": "null"}]},
+    "date": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+    "dispatch_ref": {"type": "string", "pattern": "^tree#L4/dispatch#d-[1-9][0-9]*(?:\\.[1-9][0-9]*)*-[1-9][0-9]*$"},
+    "output": {
+      "type": "object", "additionalProperties": false,
+      "required": ["slot", "content_utf8"],
+      "properties": {
+        "slot": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"},
+        "content_utf8": {"type": "string", "minLength": 1, "maxLength": 1048576, "pattern": "^[^\\u0000]*\\n$"}
+      }
+    },
+    "plan_task": {
+      "type": "object", "additionalProperties": false,
+      "required": ["title", "objective", "done_definition", "constraints", "required_output_slots"],
+      "properties": {
+        "title": {"$ref": "#/$defs/nonempty"},
+        "objective": {"$ref": "#/$defs/nonempty"},
+        "done_definition": {"$ref": "#/$defs/nonempty"},
+        "constraints": {"type": "array", "items": {"$ref": "#/$defs/nonempty"}, "uniqueItems": true},
+        "required_output_slots": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$"}, "uniqueItems": true}
+      }
+    },
+    "proposal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["proposal_id", "claim_text", "proposed_tier", "standing_class", "anchors", "instrument", "epoch"],
+      "properties": {
+        "proposal_id": {"type": "string", "pattern": "^claim-[1-9][0-9]*$"},
+        "claim_text": {"$ref": "#/$defs/nonempty"},
+        "proposed_tier": {"type": "integer", "minimum": 1, "maximum": 3},
+        "standing_class": {"enum": ["trunk", "sandbox", "slice"]},
+        "anchors": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["path", "start_line", "end_line"], "properties": {"path": {"$ref": "#/$defs/nonempty"}, "start_line": {"type": "integer", "minimum": 1}, "end_line": {"type": "integer", "minimum": 1}}}},
+        "instrument": {"$ref": "#/$defs/nullable_nonempty"},
+        "epoch": {"type": "integer", "minimum": 0}
+      }
+    },
+    "claim_verdict": {
+      "type": "object", "additionalProperties": false,
+      "required": ["proposal_id", "claim_text", "proposed_tier", "verdict", "granted_tier", "reason"],
+      "properties": {
+        "proposal_id": {"type": "string", "pattern": "^claim-[1-9][0-9]*$"},
+        "claim_text": {"$ref": "#/$defs/nonempty"},
+        "proposed_tier": {"type": "integer", "minimum": 1, "maximum": 3},
+        "verdict": {"enum": ["grant", "demote", "reject"]},
+        "granted_tier": {"oneOf": [{"type": "integer", "minimum": 1, "maximum": 3}, {"type": "null"}]},
+        "reason": {"$ref": "#/$defs/nullable_nonempty"}
+      }
+    },
+    "defect": {
+      "type": "object", "additionalProperties": false,
+      "required": ["defect_id", "kind", "proposal_id", "description", "sufficient_evidence"],
+      "properties": {
+        "defect_id": {"type": "string", "pattern": "^defect-[1-9][0-9]*$"},
+        "kind": {"enum": ["unresolvable-anchor", "undeclared-deviation", "incoherent-measurement-link", "completable-coverage-gap", "other-structural"]},
+        "proposal_id": {"oneOf": [{"type": "string", "pattern": "^claim-[1-9][0-9]*$"}, {"type": "null"}]},
+        "description": {"$ref": "#/$defs/nonempty"},
+        "sufficient_evidence": {"$ref": "#/$defs/nonempty"}
+      }
+    },
+    "payload_route": {"type": "object", "additionalProperties": false, "required": ["issue_ref", "lane", "question", "done_definition"], "properties": {"issue_ref": {"type": "string", "pattern": "^issue#I-[1-9][0-9]*$"}, "lane": {"const": "L4"}, "question": {"$ref": "#/$defs/nonempty"}, "done_definition": {"$ref": "#/$defs/nonempty"}}},
+    "payload_rerank": {"type": "object", "additionalProperties": false, "required": ["entries"], "properties": {"entries": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["issue_ref", "rank", "triage_note", "date"], "properties": {"issue_ref": {"type": "string", "pattern": "^issue#I-[1-9][0-9]*$"}, "rank": {"type": "integer", "minimum": 1}, "triage_note": {"$ref": "#/$defs/nullable_nonempty"}, "date": {"$ref": "#/$defs/date"}}}, "uniqueItems": true}}},
+    "payload_annotation": {"type": "object", "additionalProperties": false, "required": ["item_ref", "note", "date"], "properties": {"item_ref": {"type": "string", "pattern": "^ratification-item#RQ-[1-9][0-9]*$"}, "note": {"$ref": "#/$defs/nonempty"}, "date": {"$ref": "#/$defs/date"}}},
+    "payload_noop": {"type": "object", "additionalProperties": false, "required": ["reason_code"], "properties": {"reason_code": {"enum": ["no-routing-change", "awaiting-user", "awaiting-lane-return"]}}},
+    "payload_create": {"type": "object", "additionalProperties": false, "required": ["subgoal_ref", "node_ref", "question", "done_definition", "director_note"], "properties": {"subgoal_ref": {"type": "string", "pattern": "^subgoal#SG-[1-9][0-9]*$"}, "node_ref": {"type": "string", "pattern": "^tree#L4/node#[1-9][0-9]*(?:\\.[1-9][0-9]*)*$"}, "question": {"$ref": "#/$defs/nonempty"}, "done_definition": {"$ref": "#/$defs/nonempty"}, "director_note": {"$ref": "#/$defs/nullable_nonempty"}}},
+    "payload_interrupt": {"type": "object", "additionalProperties": false, "required": ["issue_ref", "subgoal_ref", "rationale", "date"], "properties": {"issue_ref": {"type": "string", "pattern": "^issue#I-[1-9][0-9]*$"}, "subgoal_ref": {"type": "string", "pattern": "^subgoal#SG-[1-9][0-9]*$"}, "rationale": {"$ref": "#/$defs/nonempty"}, "date": {"$ref": "#/$defs/date"}}},
+    "payload_recall": {"type": "object", "additionalProperties": false, "required": ["dispatch_ref", "rationale", "date"], "properties": {"dispatch_ref": {"$ref": "#/$defs/dispatch_ref"}, "rationale": {"$ref": "#/$defs/nonempty"}, "date": {"$ref": "#/$defs/date"}}},
+    "payload_plan": {"type": "object", "additionalProperties": false, "required": ["dispatch_ref", "junior_tasks", "checker_task"], "properties": {"dispatch_ref": {"$ref": "#/$defs/dispatch_ref"}, "junior_tasks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/plan_task"}}, "checker_task": {"$ref": "#/$defs/plan_task"}}},
+    "payload_report": {"type": "object", "additionalProperties": false, "required": ["dispatch_ref", "proposed_claims"], "properties": {"dispatch_ref": {"$ref": "#/$defs/dispatch_ref"}, "proposed_claims": {"type": "array", "items": {"$ref": "#/$defs/proposal"}, "uniqueItems": true}}},
+    "payload_junior": {"type": "object", "additionalProperties": false, "required": ["dispatch_ref", "completion_status"], "properties": {"dispatch_ref": {"$ref": "#/$defs/dispatch_ref"}, "completion_status": {"enum": ["done", "failed", "skipped"]}}},
+    "payload_checker": {"type": "object", "additionalProperties": false, "required": ["dispatch_ref", "verdict"], "properties": {"dispatch_ref": {"$ref": "#/$defs/dispatch_ref"}, "verdict": {"enum": ["pass", "hold"]}}},
+    "payload_verifier": {"type": "object", "additionalProperties": false, "required": ["whole_report_verdict", "plan_conformance", "coverage", "claim_verdicts", "defects", "standing", "standing_note"], "properties": {"whole_report_verdict": {"enum": ["accepted", "bounced"]}, "plan_conformance": {"enum": ["conformant", "defective"]}, "coverage": {"enum": ["complete", "honestly-bounded", "defective"]}, "claim_verdicts": {"type": "array", "items": {"$ref": "#/$defs/claim_verdict"}}, "defects": {"type": "array", "items": {"$ref": "#/$defs/defect"}}, "standing": {"enum": ["untested", "supported", "weakened", "refuted", "contested"]}, "standing_note": {"$ref": "#/$defs/nullable_nonempty"}}},
+    "action_base": {
+      "type": "object", "additionalProperties": false,
+      "required": ["action_kind", "target_ref", "payload", "outputs"],
+      "properties": {
+        "action_kind": {"enum": ["pc.route-subgoal", "pc.rerank-issue-queue", "pc.annotate-ratification", "pc.no-op", "director.create-dispatch", "director.raise-interrupt", "director.recall-dispatch", "senior.submit-plan", "senior.submit-report", "junior.return-unit-artifact", "checker.return-qa", "verifier.adjudicate-report"]},
+        "target_ref": {"$ref": "#/$defs/nonempty"},
+        "payload": {"type": "object"},
+        "outputs": {"type": "array", "items": {"$ref": "#/$defs/output"}, "uniqueItems": true}
+      }
+    },
+    "action": {
+      "allOf": [
+        {"$ref": "#/$defs/action_base"},
+        {"oneOf": [
+          {"properties": {"action_kind": {"const": "pc.route-subgoal"}, "target_ref": {"type": "string", "pattern": "^issue#I-[1-9][0-9]*$"}, "payload": {"$ref": "#/$defs/payload_route"}}},
+          {"properties": {"action_kind": {"const": "pc.rerank-issue-queue"}, "target_ref": {"const": "issue-queue#current"}, "payload": {"$ref": "#/$defs/payload_rerank"}}},
+          {"properties": {"action_kind": {"const": "pc.annotate-ratification"}, "target_ref": {"type": "string", "pattern": "^ratification-item#RQ-[1-9][0-9]*$"}, "payload": {"$ref": "#/$defs/payload_annotation"}}},
+          {"properties": {"action_kind": {"const": "pc.no-op"}, "target_ref": {"const": "pc#principal-coordinator"}, "payload": {"$ref": "#/$defs/payload_noop"}}},
+          {"properties": {"action_kind": {"const": "director.create-dispatch"}, "target_ref": {"type": "string", "pattern": "^tree#L4/node#[1-9][0-9]*(?:\\.[1-9][0-9]*)*$"}, "payload": {"$ref": "#/$defs/payload_create"}}},
+          {"properties": {"action_kind": {"const": "director.raise-interrupt"}, "target_ref": {"type": "string", "pattern": "^subgoal#SG-[1-9][0-9]*$"}, "payload": {"$ref": "#/$defs/payload_interrupt"}}},
+          {"properties": {"action_kind": {"const": "director.recall-dispatch"}, "target_ref": {"$ref": "#/$defs/dispatch_ref"}, "payload": {"$ref": "#/$defs/payload_recall"}}},
+          {"properties": {"action_kind": {"const": "senior.submit-plan"}, "target_ref": {"$ref": "#/$defs/dispatch_ref"}, "payload": {"$ref": "#/$defs/payload_plan"}}},
+          {"properties": {"action_kind": {"const": "senior.submit-report"}, "target_ref": {"$ref": "#/$defs/dispatch_ref"}, "payload": {"$ref": "#/$defs/payload_report"}}},
+          {"properties": {"action_kind": {"const": "junior.return-unit-artifact"}, "target_ref": {"$ref": "#/$defs/dispatch_ref"}, "payload": {"$ref": "#/$defs/payload_junior"}}},
+          {"properties": {"action_kind": {"const": "checker.return-qa"}, "target_ref": {"$ref": "#/$defs/dispatch_ref"}, "payload": {"$ref": "#/$defs/payload_checker"}}},
+          {"properties": {"action_kind": {"const": "verifier.adjudicate-report"}, "target_ref": {"$ref": "#/$defs/dispatch_ref"}, "payload": {"$ref": "#/$defs/payload_verifier"}}}
+        ]}
+      ]
+    },
+    "failure": {"type": "object", "additionalProperties": false, "required": ["reason_code", "summary"], "properties": {"reason_code": {"enum": ["unable-to-complete", "invalid-task-context", "tool-failure"]}, "summary": {"$ref": "#/$defs/nonempty"}}}
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "outcome", "action", "failure"],
+  "properties": {
+    "schema_version": {"const": "hypothesis-tree-producer-return/1.0.0"},
+    "outcome": {"enum": ["SUCCEEDED", "FAILED"]},
+    "action": {"oneOf": [{"$ref": "#/$defs/action"}, {"type": "null"}]},
+    "failure": {"oneOf": [{"$ref": "#/$defs/failure"}, {"type": "null"}]}
+  },
+  "oneOf": [
+    {"properties": {"outcome": {"const": "SUCCEEDED"}, "action": {"$ref": "#/$defs/action"}, "failure": {"type": "null"}}},
+    {"properties": {"outcome": {"const": "FAILED"}, "action": {"type": "null"}, "failure": {"$ref": "#/$defs/failure"}}}
+  ]
+}
