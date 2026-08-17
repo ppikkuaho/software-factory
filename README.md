@@ -40,9 +40,11 @@ A separation by the kind of thinking each does, not a rank ladder:
 - **L2 — Project Architect** — designs the shape of the solution: where the module
   boundaries fall, the interfaces between them, the decisions that are expensive to reverse.
 - **L3 — Module Designer** — takes one module and designs it in depth, then manages its
-  construction.
-- **L4 — Workstream Coordinator** — breaks a module into concrete tasks and authors the
-  acceptance tests they'll be judged against.
+  construction. For a substantial module these are two separate instances: a planning instance
+  produces the design and ends; after the plan-alignment gate passes, a fresh execution instance
+  takes the frozen design, splits it into workstreams, and runs them.
+- **L4 — Workstream Coordinator** — breaks a module into concrete tasks and owns the path
+  that turns frozen criteria into the pre-written acceptance tests they'll be judged against.
 - **L5 — Task Executor** — writes the actual code against frozen tests, paired with an
   independent reviewer (L5+) that checks it.
 
@@ -58,8 +60,8 @@ waterfall.
 The **design cycle** produces a validated plan and not a line of code. Intake turns the
 user's intent into a precise, tagged, traceable spec. The architect proposes the structure.
 The module designers detail each area in a single coordinated round, renegotiating interfaces
-against real constraints. And — critically — the tests and review rubrics are written here,
-before any code, by agents that aren't the ones who'll do the work.
+against real constraints. And — critically — the falsifiable acceptance criteria and review
+rubrics are written here, before any code, by agents that aren't the ones who'll do the work.
 
 The **plan-alignment gate** is the heart of the system, at the seam between designing and
 building. It reads the whole assembled plan against the original intent — something
@@ -67,24 +69,234 @@ per-level reviews structurally can't do — and catches the three ways a plan dr
 every local step looked fine: dropped requirements, unrequested additions, and requirements
 technically present but subtly wrong. It even inspects its own first translation (turning
 the user's prose into requirements), because that's where drift enters upstream of every
-other check. A human gives a warm sign-off on a triangulated view; nothing builds until it
+other check. It elevates only findings that need owner judgment; nothing builds until the gate
 passes.
 
 The **build cycle** begins only on PASS: executors write code against the now-frozen plan,
 every level's output checked by independent review before it moves up.
 
+### View
+
+The diagram below is a simplified view of the full two-cycle model. The current implementation
+authors executable acceptance just in time during the build cycle and asks for owner judgment only
+on findings elevated by the plan-alignment gate, rather than requiring a full human review on every
+pass.
+
+```text
+════════════════════ DESIGN CYCLE - plan pyramid, no code ════════════════════
+
+                     ┌──────────────────────────┐
+                     │           USER           │ ---> User gives task and sets scope
+                     └────────────┬─────────────┘
+                                  ▲
+                                  │ up: L1 gate, product vs intent
+                                  │
+                                  │ down: deep interview elicits intent
+                                  ▼
+                     ┌────────────┴─────────────┐
+                     │ L1 - System Orchestrator │
+                     │ elicit + guard + route   │
+                     └────────────┬─────────────┘
+                                  ▼
+                     ┌──────────────────────────┐
+                     │ tagged intent contract   │
+                     │ atoms + success criteria │
+                     └────────────┬─────────────┘
+                                  ▼
+                       ┌────────────────┐
+                       │ L2 - Architect │
+                       │ plan/contracts │
+                       └────────┬───────┘
+             ┌──────────────────┼──────────────────┐
+             ▼                  ▼                  ▼
+        ┌─────────┐        ┌─────────┐        ┌─────────┐
+        │ L3[1]   │  ...   │ L3[i]   │  ...   │ L3[n]   │
+        │ design  │        │ design  │        │ design  │
+        └─────────┘        └────┬────┘        └─────────┘
+                                │ selected plan slice
+                                ▼
+┌──────────────────────────── L3[i] design slice ───────────────────────────┐
+│                                                                           │
+│              ┌────────────────┼────────────────┐                          │
+│              ▼                ▼                ▼                          │
+│         ┌─────────┐      ┌─────────┐      ┌─────────┐                     │
+│         │ spec    │      │ contract│      │ ADRs    │                     │
+│         │ atoms   │      │ edges   │      │ + risks │                     │
+│         └─────────┘      └─────────┘      └─────────┘                     │
+│                                                                           │
+│              ┌────────────────┼────────────────┐                          │
+│              ▼                ▼                ▼                          │
+│         ┌─────────┐      ┌─────────┐      ┌─────────┐                     │
+│         │ L4 test │ ...  │ L4 test │ ...  │ L4 test │                     │
+│         │ [i,1]   │      │ [i,j]   │      │ [i,m]   │                     │
+│         └────┬────┘      └────┬────┘      └────┬────┘                     │
+│              └────────────────┼────────────────┘                          │
+│                               ▼                                           │
+│                     ┌──────────────────┐                                  │
+│                     │ frozen rubrics   │                                  │
+│                     │ + wiring spike   │                                  │
+│                     └────────┬─────────┘                                  │
+│                              ▼                                            │
+│                    validated plan, not code                               │
+└───────────────────────────────┬───────────────────────────────────────────┘
+                                ▼
+                       ┌────────────────┐
+                       │ L2 integrates  │
+                       │ whole plan     │
+                       └────────┬───────┘
+                                ▼
+
+        ┌────────────┬────────────┬────────────┐
+        │ intent map │ coverage   │ ID atoms   │
+        ├────────────┼────────────┼────────────┤
+        │ blind read │ adversary  │ human sign │
+        └─────┬──────┴─────┬──────┴─────┬──────┘
+              └────────────┼────────────┘
+                           ▼
+                  ┌─────────────────────┐
+                  │ PLAN-ALIGNMENT GATE │
+                  │ one hard checkpoint │
+                  └──────────┬──────────┘
+                             ▼ PASS
+                    unlock execution build
+
+════════════════ BUILD CYCLE - execution pyramid slice ═══════════════════════
+
+                     ┌──────────────────────────┐
+                     │ L1 - System Orchestrator │
+                     └────────────┬─────────────┘
+                                  ▼
+                       ┌────────────────┐
+                       │ L2 - Architect │
+                       └────────┬───────┘
+             ┌──────────────────┼──────────────────┐
+             ▼                  ▼                  ▼
+        ┌─────────┐        ┌─────────┐        ┌─────────┐
+        │ L3[1]   │  ...   │ L3[i]   │  ...   │ L3[n]   │
+        └─────────┘        └────┬────┘        └─────────┘
+                                │ selected slice
+                                ▼
+┌────────────────────────────── L3[i] area ─────────────────────────────────┐
+│                                                                           │
+│              ┌────────────────┼────────────────┐                          │
+│              ▼                ▼                ▼                          │
+│         ┌─────────┐      ┌─────────┐      ┌─────────┐                     │
+│         │ L4[i,1] │ ...  │ L4[i,j] │ ...  │ L4[i,m] │                     │
+│         └─────────┘      └────┬────┘      └─────────┘                     │
+│                               │ selected workstream                       │
+│                               ▼                                           │
+│   ┌──────────────────────── L4[i,j] workstream ──────────────────────┐    │
+│   │                                                                  │    │
+│   │        ┌──────────┐      ┌──────────┐      ┌──────────┐          │    │
+│   │        │L5[i,j,1] │ ...  │L5[i,j,k] │ ...  │L5[i,j,p] │          │    │
+│   │        └────┬─────┘      └────┬─────┘      └────┬─────┘          │    │
+│   │             ▼                 ▼                 ▼                │    │
+│   │        ┌──────────┐      ┌──────────┐      ┌──────────┐          │    │
+│   │        │L5+[i,j,1]│ ...  │L5+[i,j,k]│ ...  │L5+[i,j,p]│          │    │
+│   │        └────┬─────┘      └────┬─────┘      └────┬─────┘          │    │
+│   │             │ accepted leaves │                 │                │    │
+│   │             └─────────────────┼─────────────────┘                │    │
+│   │                               ▼                                  │    │
+│   │                  all L5[i,j,1..p] accepted                       │    │
+│   │                               ▼                                  │    │
+│   │                     ┌──────────────────┐                         │    │
+│   │                     │ L4[i,j] decides  │                         │    │
+│   │                     │ integrate+submit │                         │    │
+│   │                     └────────┬─────────┘                         │    │
+│   │                              ▼ submit                            │    │
+│   │                     ┌──────────────────┐                         │    │
+│   │              reject │   L4+[i,j] gate  │                         │    │
+│   │        ┌────────────┤ workstream review│                         │    │
+│   │        │            └────────┬─────────┘                         │    │
+│   │        │                     ▼ accept                            │    │
+│   │        └──── back to L4[i,j]; may fan down again                 │    │
+│   └──────────────────────────────┼───────────────────────────────────┘    │
+│                                  ▼                                        │
+│                 L3[i] receives accepted L4[i,j] package                   │
+│                 after all L4[i,1..m] packages pass                        │
+│                                  ▼                                        │
+│                         ┌──────────────────┐                              │
+│                         │ L3[i] decides    │                              │
+│                         │ integrate+submit │                              │
+│                         └────────┬─────────┘                              │
+│                                  ▼ submit                                 │
+│                         ┌──────────────────┐                              │
+│                  reject │    L3+[i] gate   │                              │
+│            ┌────────────┤ area review      │                              │
+│            │            └────────┬─────────┘                              │
+│            │                     ▼ accept                                 │
+│            └──── back to L3[i]; may fan down again                        │
+└──────────────────────────────────┼────────────────────────────────────────┘
+                                   ▼
+                  L2 receives accepted L3[i] area
+                  after all L3[1..n] areas pass
+                                   ▼
+                          ┌──────────────────┐
+                          │ L2 decides       │
+                          │ integrate+submit │
+                          └────────┬─────────┘
+                                   ▼ submit
+                          ┌──────────────────┐
+                   reject │      L2+ gate    │
+             ┌────────────┤ system review    │
+             │            └────────┬─────────┘
+             │                     ▼ accept
+             │            ┌──────────────────┐
+             │            │ L1 final report  │
+             │            └────────┬─────────┘
+             │                     ▼ submit
+             │            ┌──────────────────┐
+             │     reject │     L1 gate      │ accept
+             │   ┌────────┤ user vs intent   ├────> USER
+             │   │        └──────────────────┘
+             │   └── back to L1; may fan down again
+             └──── back to L2; may fan down again
+
+Index key:
+  L3[i]       one selected L3 area inside L3[1..n]
+  L4[i,j]     one selected L4 workstream inside L3[i,1..m]
+  L5[i,j,k]   one selected L5 task inside L4[i,j,1..p]
+  n/m/p       variable child counts; each parent may have a different count
+  L5+         reviews one L5 leaf; L4+/L3+/L2+ review completed packages
+  L1          has no plus: the user judges the final product against intent
+
+Loop rule:
+  A gate rejects to its owning producer. The producer keeps context, repairs,
+  and may cascade work back down before submitting to the same gate again.
+
+──────────────────────────────────────────────────────────────────────────────
+ONE SPINE - requirement-ID = agent address = workspace = git branch =
+rubric file = read-visibility. Decided once; everything keys off it.
+
+```
+
 ### What makes it distinctive
+
+Each level repeats the same plan / execute / review shape: going down, it turns its artifact into a
+more detailed spec and fixed criteria; coming up, a separate gate checks the lower level's work
+against those criteria. The L1–L2 relationship therefore has the same shape as L4–L5, even though
+each gate reviews at a different altitude.
+
+![Nested review loops](docs/review-loops.png)
+
+*Passing work moves outward to the next gate; a rejection returns it to the owning producer, which
+may cascade repairs inward.*
 
 - **Tests before code, by not-the-coder.** Tests written after the fact get bent to fit the
   code; written first, from the spec, by someone else, the code must serve them. Tests
   anchor only what they assert, so an independent reviewer stays load-bearing alongside
-  them, catching the fidelity gaps tests miss.
+  them, catching the fidelity gaps tests miss. In one simulated run an executor passed all
+  17 tests while taking a value from the wrong source; the tests did not assert the source,
+  and only the independent reviewer caught it.
 - **One spine.** A single hierarchical scheme is the requirement ID, the agent's address,
   the workspace path, the git branch, the rubric location, and the visibility graph —
   decided once, it serves all of them.
-- **Architecture by seams, not boxes.** Carve a system where its connections are thin, keep
-  complexity behind narrow stable interfaces, point dependencies at the stable core. "Deep
-  modules" is a rubric that pressure-tests a design, never the carving rule itself.
+- **Automated decomposition by method, not by taste.** Splitting a project into modules,
+  workstreams, and tasks follows an explicit method: C4 altitudes (system → container →
+  component), DDD seam-finding (cut where the language shifts and things change together),
+  a spec-driven (SDD) chain that ties a requirement ID from intent down to code, and
+  hexagonal ports for the interfaces. Ousterhout's “deep modules” checks a carving; it does
+  not generate one.
 - **Cross-model by design.** Generative and architectural levels and the literal, precise
   execution level run on different models. Failures escalate rather than silently degrade.
 - **Documentation is memory.** Every level can be killed and respawned from its artifacts;
@@ -182,10 +394,19 @@ research system's spine.
 
 ## Running the factory tests
 
-Run the factory suite from `factory/` with `python3 -m pytest`. On macOS, the suite automatically selects a short temporary root for AF_UNIX sockets; use the explicit fallback below only if a local environment overrides that behavior:
+The factory suite is pure-Python and offline: it needs no agent binaries, API keys, or network
+access. It requires Python 3.11+, PyYAML, and pytest. From the repository root:
 
 ```bash
 cd factory
+python3 -m pip install pyyaml pytest
+python3 -m pytest
+```
+
+On macOS, the suite automatically selects a short temporary root for AF_UNIX sockets; use this
+explicit fallback only if a local environment overrides that behavior:
+
+```bash
 TMPDIR=/tmp python3 -m pytest
 ```
 
