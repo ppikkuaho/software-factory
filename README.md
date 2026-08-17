@@ -23,10 +23,6 @@ directory next to it. In the factory's internal docs, “the harness” means th
 runtime; in the research system, `HT_ROLE=harness` names a tool-authored field. These are
 unrelated uses.
 
-Terminology: in the factory's internal docs, **the harness** means the `harnessd` factory
-runtime. In the research system, `HT_ROLE=harness` names a tool-authored field. These are
-two unrelated uses.
-
 ---
 
 ## The factory
