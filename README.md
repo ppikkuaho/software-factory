@@ -1,7 +1,7 @@
 # Software Factory
 
-A hierarchy of LLM agents that turns a person's intent into built, verified software — and
-a research system that watches the factory run and improves it.
+A software factory: a hierarchy of LLM agents that turns a person's intent into built,
+verified software, and a research system that watches the factory run and improves it.
 
 Models already write good code, so the bottleneck in building software with them has shifted
 from execution to coordination and fidelity: directing many efforts in parallel, and keeping
@@ -59,7 +59,7 @@ The module designers detail each area in a single coordinated round, renegotiati
 against real constraints. And — critically — the falsifiable acceptance criteria and review
 rubrics are written here, before any code, by agents that aren't the ones who'll do the work.
 
-The **plan-alignment gate** is the heart of the system, at the seam between designing and
+The **plan-alignment gate** is the heart of the factory, at the seam between designing and
 building. It reads the whole assembled plan against the original intent — something
 per-level reviews structurally can't do — and catches the three ways a plan drifts even when
 every local step looked fine: dropped requirements, unrequested additions, and requirements
@@ -73,7 +73,7 @@ every level's output checked by independent review before it moves up.
 
 ### View
 
-The diagram below is a simplified view of the full two-cycle model. The current implementation
+The diagram below is a simplified view of the factory's full two-cycle model. The current implementation
 authors executable acceptance just in time during the build cycle and asks for owner judgment only
 on findings elevated by the plan-alignment gate, rather than requiring a full human review on every
 pass.
@@ -275,8 +275,8 @@ each gate reviews at a different altitude.
 
 ![Nested review loops](docs/review-loops.png)
 
-*Passing work moves outward to the next gate; a rejection returns it to the owning producer, which
-may cascade repairs inward.*
+*The factory's nested review loops. Passing work moves outward to the next gate; a rejection
+returns to the owning producer, which may cascade repairs inward.*
 
 - **Tests before code, by not-the-coder.** Tests written after the fact get bent to fit the
   code; written first, from the spec, by someone else, the code must serve them. Tests
@@ -300,17 +300,16 @@ may cascade repairs inward.*
 - **Walking-skeleton first.** A thin end-to-end thread proves the connections before the
   full build commits to them.
 
-The methodology isn't invented — it's borrowed from how architecture firms and consultancies
-actually turn a client's intent into a built thing, instantiated with agents instead of
-people.
+The methodology is borrowed from how architecture firms and consultancies turn a client's
+intent into a built thing; the factory staffs that organization with agents in every seat.
 
 ---
 
 ## The research system
 
-An agent system that improves itself needs somewhere to put what it learns, and something
-that refuses to accept a claim just because an agent made it. That is what
-`research-system/` is.
+A factory that improves itself needs somewhere to put what it learns, and something that
+refuses to accept a claim just because an agent made it. `research-system/` is the factory's
+research wing.
 
 Its control plane is a **hypothesis tree**: nodes are variants of the factory, or premises
 about why an intervention should work, growing more specific with depth. Verified child
@@ -406,7 +405,7 @@ explicit fallback only if a local environment overrides that behavior:
 TMPDIR=/tmp python3 -m pytest
 ```
 
-## Operating a build
+## Operating the factory
 
 The supported operator surface is the explicit-invocation Claude Code project skill at
 `factory/.claude/skills/l1-l5-harness/SKILL.md`, which keeps `harnessctl` as the state
